@@ -27,8 +27,8 @@
             <ComboBoxItem Content="Edge"/>
         </ComboBox>
 
-        <TextBox TabIndex="2" HorizontalAlignment="Left" TextWrapping="NoWrap" VerticalAlignment="Top" Width="211" x:Name="address" Margin="11,96,0,0" Height="24" Opacity="0.85" VerticalContentAlignment="Center"/>
-        <Label Content="Adres środowiska AMMS" Foreground="Gray" VerticalAlignment="Top" Margin="11,96,39,0" IsHitTestVisible="False" Height="24">
+        <TextBox TabIndex="2" HorizontalAlignment="Left" TextWrapping="NoWrap" VerticalAlignment="Top" Width="246" x:Name="address" Margin="11,96,0,0" Height="24" Opacity="0.85" VerticalContentAlignment="Center" GotFocus="TextBox_GotFocus"/>
+        <Label Content="Adres środowiska AMMS" Foreground="Gray" VerticalAlignment="Top" Margin="11,96,45,0" IsHitTestVisible="False" Height="24">
             <Label.Style>
                 <Style TargetType="Label">
                     <Setter Property="Visibility" Value="Collapsed"/>
@@ -42,7 +42,7 @@
         </Label>
         <!-- dane test case-->
         <TextBlock  TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top" Width="246" Margin="11,125,0,0" Height="16">Dane przypadku testowego</TextBlock>
-        <TextBox TabIndex="4" HorizontalAlignment="Left" VerticalAlignment="Top" VerticalContentAlignment="Center" TextWrapping="Wrap" Width="246" x:Name="pesel" Tag="PESEL" Margin="11,141,0,0" Height="24"/>
+        <TextBox TabIndex="4" HorizontalAlignment="Left" VerticalAlignment="Top" VerticalContentAlignment="Center" TextWrapping="Wrap" Width="246" x:Name="pesel" Tag="PESEL" Margin="11,141,0,0" Height="24" GotFocus="TextBox_GotFocus"/>
         <Label Content="PESEL" Foreground="Gray" VerticalAlignment="Top" IsHitTestVisible="False" Height="24" Margin="11,141,38,0">
             <Label.Style>
                 <Style TargetType="Label">
@@ -56,7 +56,7 @@
             </Label.Style>
         </Label>
 
-        <TextBox TabIndex="5" HorizontalAlignment="Left" VerticalAlignment="Top" VerticalContentAlignment="Center" TextWrapping="Wrap" Tag="JOS" Width="246" x:Name="jos" Margin="11,166,0,0" Height="24"/>
+        <TextBox TabIndex="5" HorizontalAlignment="Left" VerticalAlignment="Top" VerticalContentAlignment="Center" TextWrapping="Wrap" Tag="JOS" Width="246" x:Name="jos" Margin="11,166,0,0" Height="24" GotFocus="TextBox_GotFocus"/>
         <Label Content="JOS" Foreground="Gray" VerticalAlignment="Top" IsHitTestVisible="False" Height="24" Margin="11,165,38,0">
             <Label.Style>
                 <Style TargetType="Label">
@@ -70,7 +70,7 @@
             </Label.Style>
         </Label>
 
-        <TextBox TabIndex="6" HorizontalAlignment="Left" VerticalAlignment="Top" TextWrapping="Wrap" AcceptsReturn="True"  Width="246" Height="56" x:Name="pac" Margin="11,192,0,0"/>
+        <TextBox TabIndex="6" HorizontalAlignment="Left" VerticalAlignment="Top" TextWrapping="Wrap" AcceptsReturn="True"  Width="246" Height="56" x:Name="pac" Margin="11,192,0,0" GotFocus="TextBox_GotFocus"/>
         <Label Content="Identyfikator pacjenta: &#x0a;Identyfikator opieki: &#x0a;Identyfikator pobytu: " Foreground="Gray" VerticalAlignment="Top" Margin="11,190,38,0" IsHitTestVisible="False" Height="58" >
             <Label.Style>
                 <Style TargetType="Label">
@@ -86,7 +86,7 @@
         <!-- dane usera -->
 
 
-        <TextBox HorizontalAlignment="Left" VerticalAlignment="Top" Width="105" x:Name="user" Margin="11,69,0,0" Height="24" VerticalContentAlignment="Center" Opacity="0.85"/>
+        <TextBox HorizontalAlignment="Left" VerticalAlignment="Top" Width="105" x:Name="user" Margin="11,69,0,0" Height="24" VerticalContentAlignment="Center" Opacity="0.85" GotFocus="TextBox_GotFocus"/>
         <Label Content="Użytkownik" Foreground="Gray" VerticalAlignment="Top" Margin="11,69,145,0" IsHitTestVisible="False" Height="23">
             <Label.Style>
                 <Style TargetType="Label">
@@ -99,7 +99,7 @@
                 </Style>
             </Label.Style>
         </Label>
-        <TextBox VerticalAlignment="Top" x:Name="pwd" Margin="117,69,39,0" Height="24" VerticalContentAlignment="Center" Opacity="0.85"/>
+        <TextBox HorizontalAlignment="Left" VerticalAlignment="Top" x:Name="pwd" Margin="117,69,0,0" Height="24" VerticalContentAlignment="Center" Opacity="0.85" Width="105" GotFocus="TextBox_GotFocus"/>
         <Label Content="Hasło" Foreground="Gray" VerticalAlignment="Top" Margin="118,69,38,0" IsHitTestVisible="False" Height="23">
             <Label.Style>
                 <Style TargetType="Label">
@@ -128,28 +128,40 @@
 
         <!-- opis -->
         <TextBlock HorizontalAlignment="Left" VerticalAlignment="Top" TextWrapping="Wrap" Text="Opis ścieżki:" Height="16" Width="246" Margin="11,253,0,0"/>
-        <TextBox TabIndex="7" HorizontalAlignment="Left" VerticalAlignment="Top" Text="" Width="246" x:Name="path" AcceptsReturn="False" Margin="11,269,0,0" Height="18"/>
+        <TextBox TabIndex="7" HorizontalAlignment="Left" VerticalAlignment="Top" Text="" Width="246" x:Name="path" AcceptsReturn="False" Margin="11,269,0,0" Height="18" GotFocus="TextBox_GotFocus"/>
 
 
         <TextBlock HorizontalAlignment="Left" VerticalAlignment="Top" TextWrapping="Wrap" Text="Rezultat Testu: " Margin="11,292,0,0" Height="16" Width="246"/>
         <TextBlock HorizontalAlignment="Left" VerticalAlignment="Top" TextWrapping="Wrap" Text="Tester v1.5 by Szymon Bogus " Margin="15,362,0,0" Height="16" Width="246" FontSize="9" Opacity="0.5"/>
-        <TextBox TabIndex="8" HorizontalAlignment="Left" VerticalAlignment="Top" TextWrapping="Wrap" Text="" Width="246" Height="55" x:Name="desc" AcceptsReturn="True" Margin="11,308,0,0"/>
+        <TextBox TabIndex="8" HorizontalAlignment="Left" VerticalAlignment="Top" TextWrapping="Wrap" Text="" Width="246" Height="55" x:Name="desc" AcceptsReturn="True" Margin="11,308,0,0" GotFocus="TextBox_GotFocus"/>
 
         <!-- prawa strona okna-->
-        <TextBox Height="294" Margin="3,69,13,0" TextWrapping="Wrap" Text="Kliknij &quot;Generuj&quot; aby wygenerować podsumowanie testu." VerticalAlignment="Top" x:Name="output" Grid.Column="1"/>
-
-        <Button TabIndex="9" Content="Generuj" HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="172" Click="Button_Click" Margin="3,43,0,0" Grid.Column="1"/>
-
-
-        <Button Content="Kopiuj całość" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="176,43,0,0" Width="172" Click="CopyToClipboardButton_Click" Height="24" Grid.Column="1"/>
-
-        <Button HorizontalAlignment="Left" Height="24" Margin="223,96,0,0" VerticalAlignment="Top" Width="35" Click="ScrapeButton_Click">
+        <Button HorizontalAlignment="Left" Height="24" VerticalAlignment="Top" Width="35" Click="ClearButton_Click" Margin="3,43,0,0" Grid.Column="1">
+            <Image Source="pack://application:,,,/TESTER;component/resources/clear.png" Width="20" Height="20" Stretch="Uniform" />
             <Button.ToolTip>
-                <ToolTip>Testuj połączenie do środowiska</ToolTip>
+                <ToolTip>Wyczyść dane</ToolTip>
             </Button.ToolTip>
-            <Image Source="/resources/get.png" Width="20" Height="20" Stretch="Uniform"/>
         </Button>
 
+        <TextBox Height="294" Margin="3,69,13,0" TextWrapping="Wrap" VerticalAlignment="Top" x:Name="output" Grid.Column="1" GotFocus="TextBox_GotFocus"/>
+        <Label Content="Kliknij &quot;Generuj&quot; aby wygenerować podsumowanie testu." Foreground="Gray" VerticalAlignment="Top" Margin="3,70,13,0" IsHitTestVisible="False" Height="83" Grid.Column="1">
+            <Label.Style>
+                <Style TargetType="Label">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding ElementName=output, Path=Text.IsEmpty}" Value="True">
+                            <Setter Property="Visibility" Value="Visible"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Label.Style>
+        </Label>
+        <Button TabIndex="9" Content="Generuj" HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="275" Click="Button_Click" Margin="38,43,0,0" Grid.Column="1"/>
+
+
+        <Button HorizontalAlignment="Left" VerticalAlignment="Top" Margin="313,43,0,0" Width="35" Click="CopyToClipboardButton_Click" Height="24" Grid.Column="1">
+            <Image Source="pack://application:,,,/TESTER;component/resources/copy.png" Width="20" Height="20" Stretch="Uniform" />
+        </Button>
         <!-- Niestandardowy pasek tytułowy -->
         <Grid x:Name="titleBar" Background="DarkSlateGray" Height="23" VerticalAlignment="Top" Grid.ColumnSpan="2" Margin="0,10,0,0">
             <Grid.ColumnDefinitions>

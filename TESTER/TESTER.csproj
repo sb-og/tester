@@ -18,6 +18,8 @@
 
   <ItemGroup>
     <None Remove="customFunctions.js" />
+    <None Remove="resources\clear.png" />
+    <None Remove="resources\copy.png" />
     <None Remove="resources\get.png" />
     <None Remove="resources\save.png" />
   </ItemGroup>
@@ -33,6 +35,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="resources\clear.png" />
+    <Resource Include="resources\copy.png" />
     <Resource Include="resources\get.png" />
     <Resource Include="resources\save.png" />
   </ItemGroup>

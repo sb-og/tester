@@ -33,6 +33,7 @@ namespace TESTER
         public MainWindow()
         {
             InitializeComponent();
+            this.ResizeMode = ResizeMode.CanMinimize;
 
             //update or create config
             ConfigHelper.CreateConfigFile();
@@ -141,10 +142,9 @@ namespace TESTER
 
 
                     output.Text =
-        $@"*1. Dane środowiska testowego:*
+                    $@"*1. Dane środowiska testowego:*
 |Przeglądarka:|{browserType} wersja: {webengine}|
 |Adres środowiska:|{ip}|
-
 |Adres Bazy danych:|{DataManager.AdresBazyDanych}|
 |NR Kompilacji AMMS:|{DataManager.NrKompilacji}|
 |Data kompilacji AMMS:|{DataManager.DataKompilacji}|
@@ -152,11 +152,26 @@ namespace TESTER
 
 *2. Dane przypadku testowego:*
 |Użytkownik:|{username}|
-|Hasło:|{password}|
-|IDK_JOS:|{idkjos}|
-|PESEL:|{nrpesel}|
-|ID_PAC:|{IdPacjenta}|
-|ID_OPIEKI:|{IdOpieki}|
+|Hasło:|{password}|";
+
+if (!String.IsNullOrEmpty(idkjos)) output.Text +=
+$@"
+|IDK_JOS:|{idkjos}|";
+
+if (!String.IsNullOrEmpty(nrpesel)) output.Text +=
+$@"
+|PESEL:|{nrpesel}|";
+
+if (!String.IsNullOrEmpty(IdPacjenta)) output.Text +=
+$@"
+|ID_PAC:|{IdPacjenta}|";
+
+if (!String.IsNullOrEmpty(IdPacjenta)) output.Text +=
+$@"
+|ID_OPIEKI:|{IdOpieki}|";
+
+output.Text +=
+$@"
 
 *3. Kroki postępowania:*
 |Ścieżka:|{steps}|
@@ -213,10 +228,31 @@ namespace TESTER
             }
 
         }
-
+        private void TextBox_GotFocus(object sender, RoutedEventArgs e)
+        {
+            TextBox textBox = sender as TextBox;
+            if (textBox != null)
+            {
+                textBox.Dispatcher.BeginInvoke(
+                    new Action(() =>
+                    {
+                        textBox.SelectAll();
+                    }),
+                    System.Windows.Threading.DispatcherPriority.Input);
+            }
+        }
         private void SaveBrowserButton_Click(object sender, RoutedEventArgs e)
         {
             ConfigHelper.SaveSetting("Browser", browserComboBox.Text);
+        }
+
+        private void ClearButton_Click(object sender, RoutedEventArgs e)
+        {
+            pesel.Text = string.Empty;
+            jos.Text = string.Empty;
+            pac.Text = string.Empty;
+            path.Text = string.Empty; 
+            desc.Text = string.Empty; 
         }
     }
 }
