@@ -160,6 +160,9 @@
 
 
         <Button HorizontalAlignment="Left" VerticalAlignment="Top" Margin="313,43,0,0" Width="35" Click="CopyToClipboardButton_Click" Height="24" Grid.Column="1">
+                    <Button.ToolTip>
+                <ToolTip>Kopiuj wynik</ToolTip>
+            </Button.ToolTip>
             <Image Source="pack://application:,,,/TESTER;component/resources/copy.png" Width="20" Height="20" Stretch="Uniform" />
         </Button>
         <!-- Niestandardowy pasek tytułowy -->
