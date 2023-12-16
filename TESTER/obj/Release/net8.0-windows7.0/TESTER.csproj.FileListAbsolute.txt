@@ -55,3 +55,4 @@ C:\Users\Admin\Desktop\Git\tester\TESTER\obj\Release\net8.0-windows7.0\refint\TE
 C:\Users\Admin\Desktop\Git\tester\TESTER\obj\Release\net8.0-windows7.0\TESTER.pdb
 C:\Users\Admin\Desktop\Git\tester\TESTER\obj\Release\net8.0-windows7.0\TESTER.genruntimeconfig.cache
 C:\Users\Admin\Desktop\Git\tester\TESTER\obj\Release\net8.0-windows7.0\ref\TESTER.dll
+C:\Users\szymon.bogus\Desktop\tester\TESTER\TESTER\obj\Release\net8.0-windows7.0\TESTER.sourcelink.json

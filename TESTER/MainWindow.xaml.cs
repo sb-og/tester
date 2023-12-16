@@ -151,8 +151,7 @@ namespace TESTER
 |Numer rewizji AMMS:|{DataManager.NrRewizji}|
 
 *2. Dane przypadku testowego:*
-|Użytkownik:|{username}|
-|Hasło:|{password}|";
+|Użytkownik/Hasło|{username}/{password}|";
 
 if (!String.IsNullOrEmpty(idkjos)) output.Text +=
 $@"

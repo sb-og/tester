@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Admin\\Desktop\\Git\\tester\\TESTER\\TESTER.csproj": {}
+    "C:\\Users\\szymon.bogus\\Desktop\\tester\\TESTER\\TESTER\\TESTER.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Admin\\Desktop\\Git\\tester\\TESTER\\TESTER.csproj": {
+    "C:\\Users\\szymon.bogus\\Desktop\\tester\\TESTER\\TESTER\\TESTER.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Admin\\Desktop\\Git\\tester\\TESTER\\TESTER.csproj",
+        "projectUniqueName": "C:\\Users\\szymon.bogus\\Desktop\\tester\\TESTER\\TESTER\\TESTER.csproj",
         "projectName": "TESTER",
-        "projectPath": "C:\\Users\\Admin\\Desktop\\Git\\tester\\TESTER\\TESTER.csproj",
-        "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Admin\\Desktop\\Git\\tester\\TESTER\\obj\\",
+        "projectPath": "C:\\Users\\szymon.bogus\\Desktop\\tester\\TESTER\\TESTER\\TESTER.csproj",
+        "packagesPath": "C:\\Users\\szymon.bogus\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\szymon.bogus\\Desktop\\tester\\TESTER\\TESTER\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\szymon.bogus\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
