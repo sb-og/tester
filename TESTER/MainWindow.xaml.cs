@@ -252,7 +252,8 @@ $@"
             jos.Text = string.Empty;
             pac.Text = string.Empty;
             path.Text = string.Empty; 
-            desc.Text = string.Empty; 
+            desc.Text = string.Empty;
+            output.Text = string.Empty;
         }
     }
 }
