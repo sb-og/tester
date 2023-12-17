@@ -166,7 +166,7 @@
             <Image Source="pack://application:,,,/TESTER;component/resources/copy.png" Width="20" Height="20" Stretch="Uniform" />
         </Button>
         <!-- Niestandardowy pasek tytułowy -->
-        <Grid x:Name="titleBar" Background="DarkSlateGray" Height="23" VerticalAlignment="Top" Grid.ColumnSpan="2" Margin="0,10,0,0">
+        <Grid x:Name="titleBar" Background="#122036" Height="23" VerticalAlignment="Top" Grid.ColumnSpan="2" Margin="0,10,0,0">
 
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
@@ -178,13 +178,13 @@
 
             <!-- Przycisk zamknięcia -->
             <Button Content="x" HorizontalAlignment="Right" VerticalAlignment="Top"
-                    FontSize="18" Foreground="Red" Background="Transparent" BorderBrush="Transparent"
-                    Click="CloseButton_Click" Width="26" Height="28" Margin="0,-5,0,0"/>
+                    FontSize="20" Foreground="Red" Background="Transparent"
+                    Click="CloseButton_Click" Width="26" Height="32" Margin="0,-9,0,0" BorderThickness="0"/>
             <!-- Przycisk "Always on top" -->
-            <Button x:Name="aot" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="12" Click="OnTopButton_Click" Width="25" Height="23">
-                <Image Source="pack://application:,,,/TESTER;component/resources/icon.ico" HorizontalAlignment="Left" Width="20" Height="20"/>
+            <Button x:Name="aot" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="12" Click="OnTopButton_Click" Width="25" Height="22" BorderThickness="0">
+                <Image Source="pack://application:,,,/TESTER;component/resources/icon.ico" HorizontalAlignment="Left" Width="30" Height="22"/>
             </Button>
-            <TextBlock Text="Tester" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="25,0,0,0" FontSize="12" Foreground="White"/>
+            <TextBlock Text="Tester" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="33,0,0,0" FontSize="12" Foreground="White"/>
 
         </Grid>
     </Grid>

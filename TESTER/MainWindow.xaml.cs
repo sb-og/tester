@@ -40,8 +40,8 @@ namespace TESTER
 
             //Load settings
             Topmost = bool.Parse(ConfigHelper.ReadSetting("Topmost"));
-            if (Topmost) aot.Background= new SolidColorBrush(Colors.Transparent);
-            else aot.Background = new SolidColorBrush(Colors.DarkGray);
+            if (!Topmost) aot.Background= new SolidColorBrush(Colors.Transparent);
+            else aot.Background = new SolidColorBrush(Colors.Black);
 
             user.Text = ConfigHelper.ReadSetting("User");
             pwd.Text = ConfigHelper.ReadSetting("Password");
@@ -203,7 +203,7 @@ $@"
             // Przełącz między Topmost i !Topmost
             Topmost = !Topmost;
             if (!Topmost) aot.Background= new SolidColorBrush(Colors.Transparent);
-            else aot.Background = new SolidColorBrush(Colors.DarkGray);
+            else aot.Background = new SolidColorBrush(Colors.Black);
 
         }
 
