@@ -40,8 +40,8 @@ namespace TESTER
 
             //Load settings
             Topmost = bool.Parse(ConfigHelper.ReadSetting("Topmost"));
-            if (Topmost) aot.Foreground = new SolidColorBrush(Colors.White);
-            else aot.Foreground = new SolidColorBrush(Colors.DarkGray);
+            if (Topmost) aot.Background= new SolidColorBrush(Colors.Transparent);
+            else aot.Background = new SolidColorBrush(Colors.DarkGray);
 
             user.Text = ConfigHelper.ReadSetting("User");
             pwd.Text = ConfigHelper.ReadSetting("Password");
@@ -202,8 +202,9 @@ $@"
         {
             // Przełącz między Topmost i !Topmost
             Topmost = !Topmost;
-            if (Topmost) aot.Foreground = new SolidColorBrush(Colors.White);
-            else aot.Foreground = new SolidColorBrush(Colors.DarkGray);
+            if (!Topmost) aot.Background= new SolidColorBrush(Colors.Transparent);
+            else aot.Background = new SolidColorBrush(Colors.DarkGray);
+
         }
 
         private void CopyToClipboardButton_Click(object sender, RoutedEventArgs e)

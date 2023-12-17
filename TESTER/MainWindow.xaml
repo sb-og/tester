@@ -160,15 +160,17 @@
 
 
         <Button HorizontalAlignment="Left" VerticalAlignment="Top" Margin="313,43,0,0" Width="35" Click="CopyToClipboardButton_Click" Height="24" Grid.Column="1">
-                    <Button.ToolTip>
+            <Button.ToolTip>
                 <ToolTip>Kopiuj wynik</ToolTip>
             </Button.ToolTip>
             <Image Source="pack://application:,,,/TESTER;component/resources/copy.png" Width="20" Height="20" Stretch="Uniform" />
         </Button>
         <!-- Niestandardowy pasek tytułowy -->
         <Grid x:Name="titleBar" Background="DarkSlateGray" Height="23" VerticalAlignment="Top" Grid.ColumnSpan="2" Margin="0,10,0,0">
+
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
+
                 <!-- Główna kolumna, zajmująca całą dostępną przestrzeń -->
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
@@ -179,10 +181,11 @@
                     FontSize="18" Foreground="Red" Background="Transparent" BorderBrush="Transparent"
                     Click="CloseButton_Click" Width="26" Height="28" Margin="0,-5,0,0"/>
             <!-- Przycisk "Always on top" -->
-            <Button Content="AOT" x:Name="aot" HorizontalAlignment="Left" VerticalAlignment="Center"
-                    FontSize="12" Background="Transparent" BorderBrush="Transparent"
-                    Click="OnTopButton_Click" Width="35" Height="23" Margin="561,0,0,0"/>
-            <TextBlock Text="Tester" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="5,0,0,0" FontSize="12" Foreground="White"/>
+            <Button x:Name="aot" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="12" Click="OnTopButton_Click" Width="25" Height="23">
+                <Image Source="pack://application:,,,/TESTER;component/resources/icon.ico" HorizontalAlignment="Left" Width="20" Height="20"/>
+            </Button>
+            <TextBlock Text="Tester" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="25,0,0,0" FontSize="12" Foreground="White"/>
+
         </Grid>
     </Grid>
 </Window>

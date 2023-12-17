@@ -21,11 +21,18 @@
     <None Remove="resources\clear.png" />
     <None Remove="resources\copy.png" />
     <None Remove="resources\get.png" />
+    <None Remove="resources\icon.ico" />
     <None Remove="resources\save.png" />
+    <None Remove="resources\testericon.ico" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="resources\icon.ico" />
+    <Resource Include="resources\icon.ico" />
+    <Content Include="resources\testericon.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <DesignData Include="resources\testericon.ico" />
   </ItemGroup>
 
   <ItemGroup>
