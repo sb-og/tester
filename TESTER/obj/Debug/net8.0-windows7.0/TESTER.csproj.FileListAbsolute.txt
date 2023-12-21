@@ -27,3 +27,6 @@ c:\Users\Admin\Desktop\Git\tester\TESTER\obj\Debug\net8.0-windows7.0\refint\TEST
 c:\Users\Admin\Desktop\Git\tester\TESTER\obj\Debug\net8.0-windows7.0\TESTER.pdb
 c:\Users\Admin\Desktop\Git\tester\TESTER\obj\Debug\net8.0-windows7.0\TESTER.genruntimeconfig.cache
 c:\Users\Admin\Desktop\Git\tester\TESTER\obj\Debug\net8.0-windows7.0\ref\TESTER.dll
+C:\Users\szymo\Source\Repos\cajinski\tester\TESTER\obj\Debug\net8.0-windows7.0\TESTER.dll
+C:\Users\szymo\Source\Repos\cajinski\tester\TESTER\obj\Debug\net8.0-windows7.0\refint\TESTER.dll
+C:\Users\szymo\Source\Repos\cajinski\tester\TESTER\obj\Debug\net8.0-windows7.0\TESTER.pdb
