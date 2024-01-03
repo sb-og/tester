@@ -1,6 +1,0 @@
-Version=1.2
-User=ADMIN
-Password=ADmN
-Topmost=False
-Browser=Edge
-Dark_Theme=True
