@@ -74,6 +74,10 @@ namespace TESTER
                     {
                         return lines[i].Split(':')[1].Trim();
                     }
+                    else if (index == 3 && lines[i].Contains("Identyfikator zlecenia:"))
+                    {
+                        return lines[i].Split(':')[1].Trim();
+                    }
                 }
             }
 
@@ -104,7 +108,8 @@ namespace TESTER
             //Dane przypadku testowego
             string IdPacjenta = ExtractCaseData(patient, 0); // Identyfikator pacjenta
             string IdOpieki = ExtractCaseData(patient, 1); // Identyfikator opieki
-            string IdZlecOrPob = ExtractCaseData(patient, 2); // Identyfikator zlecenia
+            string idPob = ExtractCaseData(patient, 2); // Identyfikator pobytu
+            string IdZlec = ExtractCaseData(patient, 3); // Identyfikator zlecenia
 
 
 
@@ -133,13 +138,6 @@ namespace TESTER
                     // Teraz możesz przekazać browserType do funkcji GetBrowserVersion
                     webengine = BrowserHelper.GetBrowserVersion(browserType);
 
-                    // Możesz użyć webengine w dalszej części kodu
-                    Console.WriteLine("Web Engine Version: " + webengine);
-
-
-
-
-
 
                     output.Text =
                     $@"*1. Dane środowiska testowego:*
@@ -165,9 +163,17 @@ if (!String.IsNullOrEmpty(IdPacjenta)) output.Text +=
 $@"
 |ID_PAC:|{IdPacjenta}|";
 
-if (!String.IsNullOrEmpty(IdPacjenta)) output.Text +=
+if (!String.IsNullOrEmpty(IdOpieki)) output.Text +=
 $@"
 |ID_OPIEKI:|{IdOpieki}|";
+
+if (!String.IsNullOrEmpty(idPob)) output.Text +=
+$@"
+|ID_POB:|{idPob}|";
+                    
+if (!String.IsNullOrEmpty(IdZlec)) output.Text +=
+$@"
+|ID_ZLEC:|{IdZlec}|";
 
 output.Text +=
 $@"

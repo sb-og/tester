@@ -13,7 +13,6 @@ C:\Users\szymon.bogus\Desktop\tester\TESTER\TESTER\obj\Release\net8.0-windows7.0
 C:\Users\szymon.bogus\Desktop\tester\TESTER\TESTER\obj\Release\net8.0-windows7.0\MainWindow.baml
 C:\Users\szymon.bogus\Desktop\tester\TESTER\TESTER\obj\Release\net8.0-windows7.0\MainWindow.g.cs
 C:\Users\szymon.bogus\Desktop\tester\TESTER\TESTER\obj\Release\net8.0-windows7.0\App.g.cs
-C:\Users\szymon.bogus\Desktop\tester\TESTER\TESTER\obj\Release\net8.0-windows7.0\TESTER_Content.g.cs
 C:\Users\szymon.bogus\Desktop\tester\TESTER\TESTER\obj\Release\net8.0-windows7.0\TESTER_MarkupCompile.cache
 C:\Users\szymon.bogus\Desktop\tester\TESTER\TESTER\obj\Release\net8.0-windows7.0\TESTER.g.resources
 C:\Users\szymon.bogus\Desktop\tester\TESTER\TESTER\obj\Release\net8.0-windows7.0\TESTER.GeneratedMSBuildEditorConfig.editorconfig

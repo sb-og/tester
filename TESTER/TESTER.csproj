@@ -28,11 +28,6 @@
 
   <ItemGroup>
     <Resource Include="resources\icon.ico" />
-    <Content Include="resources\testericon.ico" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <DesignData Include="resources\testericon.ico" />
   </ItemGroup>
 
   <ItemGroup>

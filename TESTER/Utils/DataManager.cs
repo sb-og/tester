@@ -29,8 +29,6 @@ namespace TESTER.Utils
                 Console.WriteLine($"Błąd podczas przetwarzania buildJson: {ex.Message}");
             }
         }
-
-        // Metoda do przetwarzania serviceJson (do zaimplementowania w późniejszym etapie)
         public static void ProcessServiceJson(JObject serviceJson)
         {
             try
@@ -39,8 +37,6 @@ namespace TESTER.Utils
                 AdresBazyDanych = serviceJson["additionalData"]["AMMS_BIALA"]["return"].ToString();
                 NrRewizji = serviceJson["additionalData"]["SVN_REVISION"]["return"].ToString();
                 IsUpToDate = serviceJson["status"].ToString();
-
-                // ... (jeśli są inne dane, kontynuuj przypisywanie zmiennych globalnych)
             }
             catch (Exception ex)
             {
