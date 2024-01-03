@@ -253,7 +253,7 @@ $@"
             pac.Text = string.Empty;
             path.Text = string.Empty; 
             desc.Text = string.Empty;
-            output.Text = string.Empty;
+            address.Text = string.Empty;
         }
     }
 }
