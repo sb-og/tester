@@ -183,6 +183,9 @@
             <!-- Przycisk "Always on top" -->
             <Button x:Name="aot" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="12" Click="OnTopButton_Click" Width="25" Height="22" BorderThickness="0">
                 <Image Source="pack://application:,,,/TESTER;component/resources/icon.ico" HorizontalAlignment="Left" Width="30" Height="22"/>
+                <Button.ToolTip>
+                    <ToolTip>Przełącz Always on top</ToolTip>
+                </Button.ToolTip>
             </Button>
             <TextBlock Text="Tester" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="33,0,0,0" FontSize="12" Foreground="White"/>
 

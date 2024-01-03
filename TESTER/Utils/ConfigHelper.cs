@@ -11,7 +11,7 @@ public static class ConfigHelper
     {
         { "User", "ADMIN" },
         { "Password", "ADMIN" },
-        { "Topmost", "True" },
+        { "Topmost", "False" },
         { "Browser", "Edge" },
         { "Theme", "Dark" }  // Domyślny motyw ustawiony na "Dark"
         // Dodaj kolejne domyślne ustawienia w formie par klucz-wartość
