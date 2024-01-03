@@ -234,18 +234,20 @@ $@"
             }
 
         }
+        private void TextBox_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            TextBox textBox = sender as TextBox;
+            if (textBox != null && !textBox.IsKeyboardFocusWithin)
+            {
+                textBox.Focus();
+                e.Handled = true; // Zapobiega dodatkowemu przetwarzaniu zdarzenia
+            }
+        }
+
         private void TextBox_GotFocus(object sender, RoutedEventArgs e)
         {
             TextBox textBox = sender as TextBox;
-            if (textBox != null)
-            {
-                textBox.Dispatcher.BeginInvoke(
-                    new Action(() =>
-                    {
-                        textBox.SelectAll();
-                    }),
-                    System.Windows.Threading.DispatcherPriority.Input);
-            }
+            textBox?.SelectAll();
         }
         private void SaveBrowserButton_Click(object sender, RoutedEventArgs e)
         {
