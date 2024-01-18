@@ -2,7 +2,7 @@
 <Window x:Class="TESTER.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Tester v1.5" Height="380" Width="622"
+        Title="Tester v1.6" Height="380" Width="622"
         WindowStyle="None" AllowsTransparency="True" Background="#334257" BorderThickness="0" Margin="0">
     <Window.Style>
         <Style TargetType="Window">
