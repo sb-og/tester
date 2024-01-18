@@ -7,6 +7,7 @@ namespace TESTER.Utils
 {
     public class Shkrape
     {
+        public static bool? connected = null;
         public static JObject buildJson;
         public static JObject serviceJson;
 
@@ -51,19 +52,22 @@ namespace TESTER.Utils
                         string serviceJsonString = await client.PostAsync(postLink, content).Result.Content.ReadAsStringAsync();
                         serviceJson = JObject.Parse(serviceJsonString);
                     }
+                    connected = true;
                 }
                 else
                 {
-                    Console.WriteLine("Błąd: Podany link nie jest prawidłowym adresem URL.");
+                    connected=false;
                 }
             }
             catch (HttpRequestException ex)
             {
                 Console.WriteLine($"Błąd HttpRequestException: {ex.Message}\n");
+                connected = false;
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Inny błąd: {ex.Message}\n");
+                connected = false;
             }
         }
     }

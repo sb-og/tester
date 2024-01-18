@@ -255,11 +255,15 @@ $@"
 
         private async void address_TextChanged(object sender, TextChangedEventArgs e)
         {
-            ConnectionIndicator.Source = new Uri("pack://application:,,,/resources/spinner.gif");
+            ConnectionIndicator.Visibility = Visibility.Visible;
+            ConnectionIndicator.LoadedBehavior = MediaState.Play;
+            Checkmark.Visibility = Visibility.Hidden;
+
             string baseLink = address.Text;
             try
             {
                 await Shkrape.ScrapeDataAsync(baseLink);
+                await Task.Delay(1000);
                 DataManager.ProcessBuildJson(Shkrape.buildJson);
                 DataManager.ProcessServiceJson(Shkrape.serviceJson);
             }
@@ -268,6 +272,24 @@ $@"
                 output.Text = $"Wystąpił nieoczekiwany błąd: {ex.Message}";
                 return;
             }
+
+            BitmapImage bitmap = new BitmapImage();
+            bitmap.BeginInit();
+            if (Shkrape.connected == false)
+            {
+                ConnectionIndicator.Visibility = Visibility.Hidden;
+                Checkmark.Visibility = Visibility.Visible;
+                bitmap.UriSource = new Uri("pack://application:,,,/resources/checkmark_red.png");
+                Checkmark.Source = bitmap;
+            }
+            else if(Shkrape.connected == true)
+            {
+                ConnectionIndicator.Visibility = Visibility.Hidden;
+                Checkmark.Visibility = Visibility.Visible;
+                bitmap.UriSource = new Uri("pack://application:,,,/resources/checkmark_green.png");
+                Checkmark.Source = bitmap;
+            }
+            bitmap.EndInit();
         }
     }
 }

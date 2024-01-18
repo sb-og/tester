@@ -9,6 +9,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Themes\**" />
+    <EmbeddedResource Remove="Themes\**" />
+    <None Remove="Themes\**" />
+    <Page Remove="Themes\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Remove=".cs" />
     <Compile Remove="AmmsScraper.cs" />
     <Compile Remove="Craper.cs" />
@@ -18,6 +25,9 @@
 
   <ItemGroup>
     <None Remove="customFunctions.js" />
+    <None Remove="resources\checkmark_green.png" />
+    <None Remove="resources\checkmark_red.png" />
+    <None Remove="resources\checkmark_yellow.png" />
     <None Remove="resources\clear.png" />
     <None Remove="resources\copy.png" />
     <None Remove="resources\get.png" />
@@ -42,11 +52,18 @@
     <Resource Include="resources\copy.png" />
     <Resource Include="resources\get.png" />
     <Resource Include="resources\save.png" />
-    <Resource Include="resources\spinner.gif" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Themes\" />
+    <Content Include="resources\checkmark_green.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="resources\checkmark_red.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="resources\checkmark_yellow.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="resources\spinner.gif">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

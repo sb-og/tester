@@ -42,7 +42,8 @@
         </Label>
 
 
-        <MediaElement x:Name="ConnectionIndicator" Width="35" Height="24" HorizontalAlignment="center" Margin="223,96,0,0" VerticalAlignment="Top" Source="pack://application:,,,/resources/spinner.gif" LoadedBehavior="Play" UnloadedBehavior="Stop"/>
+        <MediaElement x:Name="ConnectionIndicator" Width="35" Height="24" HorizontalAlignment="center" Margin="223,96,0,0" VerticalAlignment="Top" Source="resources/spinner.gif" LoadedBehavior="Manual" Visibility="Hidden" />
+        <Image x:Name="Checkmark" Width="35" Height="24" HorizontalAlignment="center" Margin="223,96,0,0" VerticalAlignment="Top" />
 
 
         <!-- dane test case-->
