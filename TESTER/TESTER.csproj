@@ -27,7 +27,6 @@
     <None Remove="customFunctions.js" />
     <None Remove="resources\checkmark_green.png" />
     <None Remove="resources\checkmark_red.png" />
-    <None Remove="resources\checkmark_yellow.png" />
     <None Remove="resources\clear.png" />
     <None Remove="resources\copy.png" />
     <None Remove="resources\get.png" />
@@ -44,6 +43,7 @@
   <ItemGroup>
     <PackageReference Include="HtmlAgilityPack" Version="1.11.54" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="WpfAnimatedGif" Version="2.0.2" />
     <PackageReference Include="xunit" Version="2.6.2" />
   </ItemGroup>
 
@@ -56,9 +56,6 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="resources\checkmark_red.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="resources\checkmark_yellow.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="resources\spinner.gif">

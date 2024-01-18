@@ -21,6 +21,8 @@ using System.Windows.Media.Media3D;
 using System.Windows.Interop;
 using Newtonsoft.Json;
 using TESTER.Utils;
+using WpfAnimatedGif;
+
 namespace TESTER
 {
     /// <summary>
@@ -253,11 +255,17 @@ $@"
             address.Text = string.Empty;
         }
 
+
         private async void address_TextChanged(object sender, TextChangedEventArgs e)
         {
+            var gifImage = new BitmapImage();
+            gifImage.BeginInit();
+            gifImage.UriSource = new Uri("resources/spinner.gif", UriKind.RelativeOrAbsolute);
+            gifImage.EndInit();
+
+
             ConnectionIndicator.Visibility = Visibility.Visible;
-            ConnectionIndicator.LoadedBehavior = MediaState.Play;
-            Checkmark.Visibility = Visibility.Hidden;
+            ImageBehavior.SetAnimatedSource(ConnectionIndicator, gifImage);
 
             string baseLink = address.Text;
             try
@@ -277,17 +285,13 @@ $@"
             bitmap.BeginInit();
             if (Shkrape.connected == false)
             {
-                ConnectionIndicator.Visibility = Visibility.Hidden;
-                Checkmark.Visibility = Visibility.Visible;
-                bitmap.UriSource = new Uri("pack://application:,,,/resources/checkmark_red.png");
-                Checkmark.Source = bitmap;
+                bitmap.UriSource = new Uri("resources/checkmark_red.png", UriKind.RelativeOrAbsolute);
+                ImageBehavior.SetAnimatedSource(ConnectionIndicator, bitmap);
             }
             else if(Shkrape.connected == true)
             {
-                ConnectionIndicator.Visibility = Visibility.Hidden;
-                Checkmark.Visibility = Visibility.Visible;
-                bitmap.UriSource = new Uri("pack://application:,,,/resources/checkmark_green.png");
-                Checkmark.Source = bitmap;
+                bitmap.UriSource = new Uri("resources/checkmark_green.png", UriKind.RelativeOrAbsolute);
+                ImageBehavior.SetAnimatedSource(ConnectionIndicator, bitmap);
             }
             bitmap.EndInit();
         }
