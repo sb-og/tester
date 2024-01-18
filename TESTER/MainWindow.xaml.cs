@@ -32,6 +32,7 @@ namespace TESTER
 
         public MainWindow()
         {
+
             InitializeComponent();
             this.ResizeMode = ResizeMode.CanMinimize;
 
@@ -47,10 +48,10 @@ namespace TESTER
             pwd.Text = ConfigHelper.ReadSetting("Password");
             browserComboBox.Text = ConfigHelper.ReadSetting("Browser");
 
-
-
-
             _scroller = new Scroller(this);
+
+            Credits.Text = this.Title.ToString() + " By: Szymon Bogus";
+
         }
 
 
@@ -114,18 +115,6 @@ namespace TESTER
 
 
             // Pobierz bazowy link z pola tekstowego "address"
-            string baseLink = address.Text;
-            try
-            {
-                await Shkrape.ScrapeDataAsync(baseLink);
-                DataManager.ProcessBuildJson(Shkrape.buildJson);
-                DataManager.ProcessServiceJson(Shkrape.serviceJson);
-            }
-            catch (Exception ex)
-            {
-                output.Text = $"Wystąpił nieoczekiwany błąd: {ex.Message}";
-                return;
-            }
 
             if (browserComboBox.SelectedItem != null)
             {
@@ -165,7 +154,7 @@ $@"
 
 if (!String.IsNullOrEmpty(IdOpieki)) output.Text +=
 $@"
-|ID_OPIEKI:|{IdOpieki}|";
+|ID_OPI:|{IdOpieki}|";
 
 if (!String.IsNullOrEmpty(idPob)) output.Text +=
 $@"
@@ -262,6 +251,23 @@ $@"
             path.Text = string.Empty; 
             desc.Text = string.Empty;
             address.Text = string.Empty;
+        }
+
+        private async void address_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            ConnectionIndicator.Source = new Uri("pack://application:,,,/resources/spinner.gif");
+            string baseLink = address.Text;
+            try
+            {
+                await Shkrape.ScrapeDataAsync(baseLink);
+                DataManager.ProcessBuildJson(Shkrape.buildJson);
+                DataManager.ProcessServiceJson(Shkrape.serviceJson);
+            }
+            catch (Exception ex)
+            {
+                output.Text = $"Wystąpił nieoczekiwany błąd: {ex.Message}";
+                return;
+            }
         }
     }
 }

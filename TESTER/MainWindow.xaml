@@ -2,7 +2,7 @@
 <Window x:Class="TESTER.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Tester v1.2" Height="378" Width="622"
+        Title="Tester v1.5" Height="380" Width="622"
         WindowStyle="None" AllowsTransparency="True" Background="#334257" BorderThickness="0" Margin="0">
     <Window.Style>
         <Style TargetType="Window">
@@ -27,8 +27,8 @@
             <ComboBoxItem Content="Edge"/>
         </ComboBox>
 
-        <TextBox TabIndex="2" HorizontalAlignment="Left" TextWrapping="NoWrap" VerticalAlignment="Top" Width="246" x:Name="address" Margin="11,96,0,0" Height="24" Opacity="0.85" VerticalContentAlignment="Center" PreviewMouseLeftButtonDown="TextBox_PreviewMouseLeftButtonDown" GotKeyboardFocus="TextBox_GotFocus"/>
-        <Label Content="Adres środowiska AMMS" Foreground="Gray" VerticalAlignment="Top" Margin="11,96,0,0" IsHitTestVisible="False" Height="24" HorizontalAlignment="Left" Width="205">
+        <TextBox TabIndex="2" HorizontalAlignment="Left" TextWrapping="NoWrap" VerticalAlignment="Top" Width="211" x:Name="address" Margin="11,96,0,0" Height="24" Opacity="0.85" VerticalContentAlignment="Center" TextChanged="address_TextChanged"  PreviewMouseLeftButtonDown="TextBox_PreviewMouseLeftButtonDown" GotKeyboardFocus="TextBox_GotFocus"/>
+        <Label Content="Adres środowiska AMMS" Foreground="Gray" VerticalAlignment="Top" Margin="11,96,0,0" IsHitTestVisible="False" Height="24" HorizontalAlignment="Left" Width="168">
             <Label.Style>
                 <Style TargetType="Label">
                     <Setter Property="Visibility" Value="Collapsed"/>
@@ -40,6 +40,11 @@
                 </Style>
             </Label.Style>
         </Label>
+
+
+        <MediaElement x:Name="ConnectionIndicator" Width="35" Height="24" HorizontalAlignment="center" Margin="223,96,0,0" VerticalAlignment="Top" Source="pack://application:,,,/resources/spinner.gif" LoadedBehavior="Play" UnloadedBehavior="Stop"/>
+
+
         <!-- dane test case-->
         <TextBlock  TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top" Width="246" Margin="11,125,0,0" Height="16">Dane przypadku testowego</TextBlock>
         <TextBox TabIndex="4" HorizontalAlignment="Left" VerticalAlignment="Top" VerticalContentAlignment="Center" TextWrapping="Wrap" Width="246" x:Name="pesel" Tag="PESEL" Margin="11,141,0,0" Height="24" PreviewMouseLeftButtonDown="TextBox_PreviewMouseLeftButtonDown" GotKeyboardFocus="TextBox_GotFocus"/>
@@ -70,19 +75,7 @@
             </Label.Style>
         </Label>
 
-        <TextBox TabIndex="6" HorizontalAlignment="Left" VerticalAlignment="Top" TextWrapping="Wrap" AcceptsReturn="True"  Width="246" Height="56" x:Name="pac" Margin="11,192,0,0" PreviewMouseLeftButtonDown="TextBox_PreviewMouseLeftButtonDown" GotKeyboardFocus="TextBox_GotFocus"/>
-        <Label Content="Identyfikator pacjenta: &#x0a;Identyfikator opieki: &#x0a;Identyfikator pobytu: " Foreground="Gray" VerticalAlignment="Top" Margin="11,190,38,0" IsHitTestVisible="False" Height="58" >
-            <Label.Style>
-                <Style TargetType="Label">
-                    <Setter Property="Visibility" Value="Collapsed"/>
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding ElementName=pac, Path=Text.IsEmpty}" Value="True">
-                            <Setter Property="Visibility" Value="Visible"/>
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </Label.Style>
-        </Label>
+        <TextBox Text="Identyfikator pacjenta: &#x0a;Identyfikator opieki: &#x0a;Identyfikator pobytu: &#x0a;Identyfikator zlecenia: " TabIndex="6" HorizontalAlignment="Left" VerticalAlignment="Top" TextWrapping="Wrap" AcceptsReturn="True"  Width="246" Height="66" x:Name="pac" Margin="11,192,0,0" PreviewMouseLeftButtonDown="TextBox_PreviewMouseLeftButtonDown" GotKeyboardFocus="TextBox_GotFocus"/>
         <!-- dane usera -->
 
 
@@ -127,12 +120,15 @@
         </Button>
 
         <!-- opis -->
-        <TextBlock HorizontalAlignment="Left" VerticalAlignment="Top" TextWrapping="Wrap" Text="Opis ścieżki:" Height="16" Width="246" Margin="11,253,0,0"/>
-        <TextBox TabIndex="7" HorizontalAlignment="Left" VerticalAlignment="Top" Text="" Width="246" x:Name="path" AcceptsReturn="False" Margin="11,269,0,0" Height="18" PreviewMouseLeftButtonDown="TextBox_PreviewMouseLeftButtonDown" GotKeyboardFocus="TextBox_GotFocus"/>
+        <TextBlock HorizontalAlignment="Left" VerticalAlignment="Top" TextWrapping="Wrap" Text="Opis ścieżki:" Height="16" Width="246" Margin="11,258,0,0"/>
+        <TextBox TabIndex="7" HorizontalAlignment="Left" VerticalAlignment="Top" Text="" Width="246" x:Name="path" AcceptsReturn="True" Margin="11,274,0,0" Height="18" PreviewMouseLeftButtonDown="TextBox_PreviewMouseLeftButtonDown" GotKeyboardFocus="TextBox_GotFocus"/>
 
 
         <TextBlock HorizontalAlignment="Left" VerticalAlignment="Top" TextWrapping="Wrap" Text="Rezultat Testu: " Margin="11,292,0,0" Height="16" Width="246"/>
-        <TextBlock HorizontalAlignment="Left" VerticalAlignment="Top" TextWrapping="Wrap" Text="Tester v1.5 by Szymon Bogus " Margin="15,362,0,0" Height="16" Width="246" FontSize="9" Opacity="0.5"/>
+
+
+        <TextBlock HorizontalAlignment="Left" VerticalAlignment="Top" TextWrapping="Wrap" x:Name="Credits" Margin="15,362,0,0" Height="19" Width="246" FontSize="9" Opacity="0.5"/>
+
         <TextBox TabIndex="8" HorizontalAlignment="Left" VerticalAlignment="Top" TextWrapping="Wrap" Text="" Width="246" Height="55" x:Name="desc" AcceptsReturn="True" Margin="11,308,0,0" PreviewMouseLeftButtonDown="TextBox_PreviewMouseLeftButtonDown" GotKeyboardFocus="TextBox_GotFocus"/>
 
         <!-- prawa strona okna-->
@@ -190,5 +186,6 @@
             <TextBlock Text="Tester" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="33,0,0,0" FontSize="12" Foreground="White"/>
 
         </Grid>
+
     </Grid>
 </Window>

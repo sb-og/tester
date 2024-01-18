@@ -23,6 +23,7 @@
     <None Remove="resources\get.png" />
     <None Remove="resources\icon.ico" />
     <None Remove="resources\save.png" />
+    <None Remove="resources\spinner.gif" />
     <None Remove="resources\testericon.ico" />
   </ItemGroup>
 
@@ -41,6 +42,7 @@
     <Resource Include="resources\copy.png" />
     <Resource Include="resources\get.png" />
     <Resource Include="resources\save.png" />
+    <Resource Include="resources\spinner.gif" />
   </ItemGroup>
 
   <ItemGroup>
