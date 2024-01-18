@@ -186,6 +186,8 @@ $@"
 
         private void SaveUserButton_Click(object sender, RoutedEventArgs e)
         {
+            ConfigHelper.SaveSetting("Browser", browserComboBox.Text);
+
             string key1 = "User";
             string value1 = user.Text;
             ConfigHelper.SaveSetting(key1, value1);
@@ -240,19 +242,16 @@ $@"
             TextBox textBox = sender as TextBox;
             textBox?.SelectAll();
         }
-        private void SaveBrowserButton_Click(object sender, RoutedEventArgs e)
-        {
-            ConfigHelper.SaveSetting("Browser", browserComboBox.Text);
-        }
 
         private void ClearButton_Click(object sender, RoutedEventArgs e)
         {
             pesel.Text = string.Empty;
             jos.Text = string.Empty;
-            pac.Text = string.Empty;
+            pac.Text = "Identyfikator pacjenta: \nIdentyfikator opieki: \nIdentyfikator pobytu: \nIdentyfikator zlecenia: ";
             path.Text = string.Empty; 
             desc.Text = string.Empty;
             address.Text = string.Empty;
+            ImageBehavior.SetAnimatedSource(ConnectionIndicator, null);
         }
 
 

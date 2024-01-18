@@ -22,13 +22,13 @@
         </Grid.ColumnDefinitions>
         <!-- lewa strona okna -->
         <!-- dane podstawowe -->
-        <ComboBox x:Name="browserComboBox" HorizontalAlignment="Left" VerticalAlignment="Top" Width="211" Margin="11,43,0,0" Height="24" Opacity="0.85">
+        <ComboBox Background="#344154" x:Name="browserComboBox" HorizontalAlignment="Left" VerticalAlignment="Top" Width="246" Margin="11,43,0,0" Height="24" Opacity="0.85">
             <ComboBoxItem Content="Firefox"/>
             <ComboBoxItem Content="Chrome"/>
             <ComboBoxItem Content="Edge"/>
         </ComboBox>
 
-        <TextBox TabIndex="2" HorizontalAlignment="Left" TextWrapping="NoWrap" VerticalAlignment="Top" Width="246" x:Name="address" Margin="11,96,0,0" Height="24" Opacity="0.85" VerticalContentAlignment="Center" TextChanged="address_TextChanged"  PreviewMouseLeftButtonDown="TextBox_PreviewMouseLeftButtonDown" GotKeyboardFocus="TextBox_GotFocus"/>
+        <TextBox Background="#243040" Foreground="White" TabIndex="2" HorizontalAlignment="Left" TextWrapping="NoWrap" VerticalAlignment="Top" Width="212" x:Name="address" Margin="11,96,0,0" Height="24" Opacity="0.85" VerticalContentAlignment="Center" TextChanged="address_TextChanged"  PreviewMouseLeftButtonDown="TextBox_PreviewMouseLeftButtonDown" GotKeyboardFocus="TextBox_GotFocus"/>
         <Label Content="Adres środowiska AMMS" Foreground="Gray" VerticalAlignment="Top" Margin="11,96,0,0" IsHitTestVisible="False" Height="24" HorizontalAlignment="Left" Width="168">
             <Label.Style>
                 <Style TargetType="Label">
@@ -43,10 +43,10 @@
         </Label>
 
         <Image x:Name="ConnectionIndicator" Width="35" Height="24" HorizontalAlignment="center" Margin="223,96,0,0" VerticalAlignment="Top" />
-        
+
         <!-- dane test case-->
-        <TextBlock  TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top" Width="246" Margin="11,125,0,0" Height="16">Dane przypadku testowego</TextBlock>
-        <TextBox TabIndex="4" HorizontalAlignment="Left" VerticalAlignment="Top" VerticalContentAlignment="Center" TextWrapping="Wrap" Width="246" x:Name="pesel" Tag="PESEL" Margin="11,141,0,0" Height="24" PreviewMouseLeftButtonDown="TextBox_PreviewMouseLeftButtonDown" GotKeyboardFocus="TextBox_GotFocus"/>
+        <TextBlock TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top" Width="246" Margin="11,125,0,0" Height="16">Dane przypadku testowego</TextBlock>
+        <TextBox Background="#243040" Foreground="White" TabIndex="4" HorizontalAlignment="Left" VerticalAlignment="Top" VerticalContentAlignment="Center" TextWrapping="Wrap" Width="246" x:Name="pesel" Tag="PESEL" Margin="11,141,0,0" Height="24" PreviewMouseLeftButtonDown="TextBox_PreviewMouseLeftButtonDown" GotKeyboardFocus="TextBox_GotFocus"/>
         <Label Content="PESEL" Foreground="Gray" VerticalAlignment="Top" IsHitTestVisible="False" Height="24" Margin="11,141,38,0">
             <Label.Style>
                 <Style TargetType="Label">
@@ -60,7 +60,7 @@
             </Label.Style>
         </Label>
 
-        <TextBox TabIndex="5" HorizontalAlignment="Left" VerticalAlignment="Top" VerticalContentAlignment="Center" TextWrapping="Wrap" Tag="JOS" Width="246" x:Name="jos" Margin="11,166,0,0" Height="24" PreviewMouseLeftButtonDown="TextBox_PreviewMouseLeftButtonDown" GotKeyboardFocus="TextBox_GotFocus"/>
+        <TextBox Background="#243040" Foreground="White" TabIndex="5" HorizontalAlignment="Left" VerticalAlignment="Top" VerticalContentAlignment="Center" TextWrapping="Wrap" Tag="JOS" Width="246" x:Name="jos" Margin="11,166,0,0" Height="24" PreviewMouseLeftButtonDown="TextBox_PreviewMouseLeftButtonDown" GotKeyboardFocus="TextBox_GotFocus"/>
         <Label Content="JOS" Foreground="Gray" VerticalAlignment="Top" IsHitTestVisible="False" Height="24" Margin="11,165,38,0">
             <Label.Style>
                 <Style TargetType="Label">
@@ -74,11 +74,11 @@
             </Label.Style>
         </Label>
 
-        <TextBox Text="Identyfikator pacjenta: &#x0a;Identyfikator opieki: &#x0a;Identyfikator pobytu: &#x0a;Identyfikator zlecenia: " TabIndex="6" HorizontalAlignment="Left" VerticalAlignment="Top" TextWrapping="Wrap" AcceptsReturn="True"  Width="246" Height="66" x:Name="pac" Margin="11,192,0,0" PreviewMouseLeftButtonDown="TextBox_PreviewMouseLeftButtonDown" GotKeyboardFocus="TextBox_GotFocus"/>
+        <TextBox Background="#243040" Foreground="White" Text="Identyfikator pacjenta: &#x0a;Identyfikator opieki: &#x0a;Identyfikator pobytu: &#x0a;Identyfikator zlecenia: " TabIndex="6" HorizontalAlignment="Left" VerticalAlignment="Top" TextWrapping="Wrap" AcceptsReturn="True"  Width="246" Height="66" x:Name="pac" Margin="11,192,0,0" PreviewMouseLeftButtonDown="TextBox_PreviewMouseLeftButtonDown" GotKeyboardFocus="TextBox_GotFocus"/>
         <!-- dane usera -->
 
 
-        <TextBox HorizontalAlignment="Left" VerticalAlignment="Top" Width="105" x:Name="user" Margin="11,69,0,0" Height="24" VerticalContentAlignment="Center" Opacity="0.85" PreviewMouseLeftButtonDown="TextBox_PreviewMouseLeftButtonDown" GotKeyboardFocus="TextBox_GotFocus"/>
+        <TextBox Background="#243040" Foreground="White" HorizontalAlignment="Left" VerticalAlignment="Top" Width="105" x:Name="user" Margin="11,69,0,0" Height="24" VerticalContentAlignment="Center" Opacity="0.85" PreviewMouseLeftButtonDown="TextBox_PreviewMouseLeftButtonDown" GotKeyboardFocus="TextBox_GotFocus"/>
         <Label Content="Użytkownik" Foreground="Gray" VerticalAlignment="Top" Margin="11,69,145,0" IsHitTestVisible="False" Height="23">
             <Label.Style>
                 <Style TargetType="Label">
@@ -91,7 +91,7 @@
                 </Style>
             </Label.Style>
         </Label>
-        <TextBox HorizontalAlignment="Left" VerticalAlignment="Top" x:Name="pwd" Margin="117,69,0,0" Height="24" VerticalContentAlignment="Center" Opacity="0.85" Width="105" PreviewMouseLeftButtonDown="TextBox_PreviewMouseLeftButtonDown" GotKeyboardFocus="TextBox_GotFocus"/>
+        <TextBox Background="#243040" Foreground="White" HorizontalAlignment="Left" VerticalAlignment="Top" x:Name="pwd" Margin="117,69,0,0" Height="24" VerticalContentAlignment="Center" Opacity="0.85" Width="105" PreviewMouseLeftButtonDown="TextBox_PreviewMouseLeftButtonDown" GotKeyboardFocus="TextBox_GotFocus"/>
         <Label Content="Hasło" Foreground="Gray" VerticalAlignment="Top" Margin="118,69,38,0" IsHitTestVisible="False" Height="23">
             <Label.Style>
                 <Style TargetType="Label">
@@ -104,23 +104,16 @@
                 </Style>
             </Label.Style>
         </Label>
-        <Button HorizontalAlignment="Left" Height="24" VerticalAlignment="Top" Width="35" Click="SaveUserButton_Click" Margin="223,69,0,0">
+        <Button Background="#243040" HorizontalAlignment="Left" Height="24" VerticalAlignment="Top" Width="35" Click="SaveUserButton_Click" Margin="223,69,0,0">
             <Image Source="pack://application:,,,/TESTER;component/resources/save.png" Width="20" Height="20" Stretch="Uniform" />
             <Button.ToolTip>
                 <ToolTip>Zapisz domyślnego użytkownika</ToolTip>
             </Button.ToolTip>
         </Button>
 
-        <Button HorizontalAlignment="Left" Height="24" VerticalAlignment="Top" Width="35" Click="SaveBrowserButton_Click" Margin="223,43,0,0" >
-            <Image Source="pack://application:,,,/TESTER;component/resources/save.png" Width="20" Height="20" Stretch="Uniform" />
-            <Button.ToolTip>
-                <ToolTip>Zapisz domyślną przeglądarkę</ToolTip>
-            </Button.ToolTip>
-        </Button>
-
         <!-- opis -->
         <TextBlock HorizontalAlignment="Left" VerticalAlignment="Top" TextWrapping="Wrap" Text="Opis ścieżki:" Height="16" Width="246" Margin="11,258,0,0"/>
-        <TextBox TabIndex="7" HorizontalAlignment="Left" VerticalAlignment="Top" Text="" Width="246" x:Name="path" AcceptsReturn="True" Margin="11,274,0,0" Height="18" PreviewMouseLeftButtonDown="TextBox_PreviewMouseLeftButtonDown" GotKeyboardFocus="TextBox_GotFocus"/>
+        <TextBox Background="#243040" Foreground="White" TabIndex="7" HorizontalAlignment="Left" VerticalAlignment="Top" Text="" Width="246" x:Name="path" AcceptsReturn="True" Margin="11,274,0,0" Height="18" PreviewMouseLeftButtonDown="TextBox_PreviewMouseLeftButtonDown" GotKeyboardFocus="TextBox_GotFocus"/>
 
 
         <TextBlock HorizontalAlignment="Left" VerticalAlignment="Top" TextWrapping="Wrap" Text="Rezultat Testu: " Margin="11,292,0,0" Height="16" Width="246"/>
@@ -128,7 +121,7 @@
 
         <TextBlock HorizontalAlignment="Left" VerticalAlignment="Top" TextWrapping="Wrap" x:Name="Credits" Margin="15,362,0,0" Height="19" Width="246" FontSize="9" Opacity="0.5"/>
 
-        <TextBox TabIndex="8" HorizontalAlignment="Left" VerticalAlignment="Top" TextWrapping="Wrap" Text="" Width="246" Height="55" x:Name="desc" AcceptsReturn="True" Margin="11,308,0,0" PreviewMouseLeftButtonDown="TextBox_PreviewMouseLeftButtonDown" GotKeyboardFocus="TextBox_GotFocus"/>
+        <TextBox Background="#243040" Foreground="White" TabIndex="8" HorizontalAlignment="Left" VerticalAlignment="Top" TextWrapping="Wrap" Text="" Width="246" Height="55" x:Name="desc" AcceptsReturn="True" Margin="11,308,0,0" PreviewMouseLeftButtonDown="TextBox_PreviewMouseLeftButtonDown" GotKeyboardFocus="TextBox_GotFocus"/>
 
         <!-- prawa strona okna-->
         <Button HorizontalAlignment="Left" Height="24" VerticalAlignment="Top" Width="35" Click="ClearButton_Click" Margin="3,43,0,0" Grid.Column="1">
@@ -138,7 +131,7 @@
             </Button.ToolTip>
         </Button>
 
-        <TextBox Height="294" Margin="3,69,13,0" TextWrapping="Wrap" VerticalAlignment="Top" x:Name="output" Grid.Column="1" PreviewMouseLeftButtonDown="TextBox_PreviewMouseLeftButtonDown" GotKeyboardFocus="TextBox_GotFocus"/>
+        <TextBox Background="#243040" Foreground="White" Height="294" Margin="3,69,13,0" TextWrapping="Wrap" VerticalAlignment="Top" x:Name="output" Grid.Column="1" PreviewMouseLeftButtonDown="TextBox_PreviewMouseLeftButtonDown" GotKeyboardFocus="TextBox_GotFocus"/>
         <Label Content="Kliknij &quot;Generuj&quot; aby wygenerować podsumowanie testu." Foreground="Gray" VerticalAlignment="Top" Margin="3,70,13,0" IsHitTestVisible="False" Height="83" Grid.Column="1">
             <Label.Style>
                 <Style TargetType="Label">
