@@ -22,6 +22,7 @@ using System.Windows.Interop;
 using Newtonsoft.Json;
 using TESTER.Utils;
 using WpfAnimatedGif;
+using System.Diagnostics.Eventing.Reader;
 
 namespace TESTER
 {
@@ -267,32 +268,39 @@ $@"
             ImageBehavior.SetAnimatedSource(ConnectionIndicator, gifImage);
 
             string baseLink = address.Text;
-            try
+            if (baseLink != string.Empty)
             {
-                await Shkrape.ScrapeDataAsync(baseLink);
-                await Task.Delay(1000);
-                DataManager.ProcessBuildJson(Shkrape.buildJson);
-                DataManager.ProcessServiceJson(Shkrape.serviceJson);
-            }
-            catch (Exception ex)
-            {
-                output.Text = $"Wystąpił nieoczekiwany błąd: {ex.Message}";
-                return;
-            }
+                try
+                {
+                    await Shkrape.ScrapeDataAsync(baseLink);
+                    await Task.Delay(1000);
+                    DataManager.ProcessBuildJson(Shkrape.buildJson);
+                    DataManager.ProcessServiceJson(Shkrape.serviceJson);
+                }
+                catch (Exception ex)
+                {
+                    output.Text = $"Wystąpił nieoczekiwany błąd: {ex.Message}";
+                    return;
+                }
 
-            BitmapImage bitmap = new BitmapImage();
-            bitmap.BeginInit();
-            if (Shkrape.connected == false)
-            {
-                bitmap.UriSource = new Uri("resources/checkmark_red.png", UriKind.RelativeOrAbsolute);
-                ImageBehavior.SetAnimatedSource(ConnectionIndicator, bitmap);
+                BitmapImage bitmap = new BitmapImage();
+                bitmap.BeginInit();
+                if (Shkrape.connected == false)
+                {
+                    bitmap.UriSource = new Uri("resources/checkmark_red.png", UriKind.RelativeOrAbsolute);
+                    ImageBehavior.SetAnimatedSource(ConnectionIndicator, bitmap);
+                }
+                else if (Shkrape.connected == true)
+                {
+                    bitmap.UriSource = new Uri("resources/checkmark_green.png", UriKind.RelativeOrAbsolute);
+                    ImageBehavior.SetAnimatedSource(ConnectionIndicator, bitmap);
+                }
+                bitmap.EndInit();
             }
-            else if(Shkrape.connected == true)
+            else
             {
-                bitmap.UriSource = new Uri("resources/checkmark_green.png", UriKind.RelativeOrAbsolute);
-                ImageBehavior.SetAnimatedSource(ConnectionIndicator, bitmap);
+                ImageBehavior.SetAnimatedSource(ConnectionIndicator, null);
             }
-            bitmap.EndInit();
         }
     }
 }
