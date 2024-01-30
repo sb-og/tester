@@ -134,7 +134,7 @@ namespace TESTER
                     output.Text =
                     $@"*1. Dane środowiska testowego:*
 |Przeglądarka:|{browserType} wersja: {webengine}|
-|Adres środowiska:|{ip}|
+|Adres środowiska:|[{ip}]|
 |Adres Bazy danych:|{DataManager.AdresBazyDanych}|
 |NR Kompilacji AMMS:|{DataManager.NrKompilacji}|
 |Data kompilacji AMMS:|{DataManager.DataKompilacji}|
@@ -174,7 +174,7 @@ $@"
 |Ścieżka:|{steps}|
 
 *4. Uzyskany rezultat*
-* {description}
+{description}
 ";
                 }
             }
@@ -265,6 +265,7 @@ $@"
 
 
             ConnectionIndicator.Visibility = Visibility.Visible;
+            address.Width = 212;
             ImageBehavior.SetAnimatedSource(ConnectionIndicator, gifImage);
 
             string baseLink = address.Text;
@@ -287,19 +288,26 @@ $@"
                 bitmap.BeginInit();
                 if (Shkrape.connected == false)
                 {
+                    address.Width = 212;
                     bitmap.UriSource = new Uri("resources/checkmark_red.png", UriKind.RelativeOrAbsolute);
                     ImageBehavior.SetAnimatedSource(ConnectionIndicator, bitmap);
+                    
                 }
                 else if (Shkrape.connected == true)
                 {
+                    address.Width = 212;
                     bitmap.UriSource = new Uri("resources/checkmark_green.png", UriKind.RelativeOrAbsolute);
                     ImageBehavior.SetAnimatedSource(ConnectionIndicator, bitmap);
+                    
                 }
                 bitmap.EndInit();
             }
             else
             {
+                await Task.Delay(1000);
                 ImageBehavior.SetAnimatedSource(ConnectionIndicator, null);
+                address.Width = 246;
+
             }
         }
     }

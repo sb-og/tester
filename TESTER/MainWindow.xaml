@@ -28,7 +28,7 @@
             <ComboBoxItem Content="Edge"/>
         </ComboBox>
 
-        <TextBox Background="#243040" Foreground="White" TabIndex="2" HorizontalAlignment="Left" TextWrapping="NoWrap" VerticalAlignment="Top" Width="212" x:Name="address" Margin="11,96,0,0" Height="24" Opacity="0.85" VerticalContentAlignment="Center" TextChanged="address_TextChanged"  PreviewMouseLeftButtonDown="TextBox_PreviewMouseLeftButtonDown" GotKeyboardFocus="TextBox_GotFocus"/>
+        <TextBox Background="#243040" Foreground="White" TabIndex="2" HorizontalAlignment="Left" TextWrapping="NoWrap" VerticalAlignment="Top" Width="246" x:Name="address" Margin="11,96,0,0" Height="24" Opacity="0.85" VerticalContentAlignment="Center" TextChanged="address_TextChanged"  PreviewMouseLeftButtonDown="TextBox_PreviewMouseLeftButtonDown" GotKeyboardFocus="TextBox_GotFocus"/>
         <Label Content="Adres środowiska AMMS" Foreground="Gray" VerticalAlignment="Top" Margin="11,96,0,0" IsHitTestVisible="False" Height="24" HorizontalAlignment="Left" Width="168">
             <Label.Style>
                 <Style TargetType="Label">
@@ -107,7 +107,7 @@
         <Button Background="#243040" HorizontalAlignment="Left" Height="24" VerticalAlignment="Top" Width="35" Click="SaveUserButton_Click" Margin="223,69,0,0">
             <Image Source="pack://application:,,,/TESTER;component/resources/save.png" Width="20" Height="20" Stretch="Uniform" />
             <Button.ToolTip>
-                <ToolTip>Zapisz domyślnego użytkownika</ToolTip>
+                <ToolTip>Zapisz domyślnego użytkownika i przeglądarkę</ToolTip>
             </Button.ToolTip>
         </Button>
 
