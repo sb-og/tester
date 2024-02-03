@@ -44,8 +44,8 @@ namespace TESTER
 
             //Load settings
             Topmost = bool.Parse(ConfigHelper.ReadSetting("Topmost"));
-            if (!Topmost) aot.Background= new SolidColorBrush(Colors.Transparent);
-            else aot.Background = new SolidColorBrush(Colors.Black);
+            //if (!Topmost) aot.Background= new SolidColorBrush(Colors.Transparent);
+            //else aot.Background = new SolidColorBrush(Colors.Black);
 
             user.Text = ConfigHelper.ReadSetting("User");
             pwd.Text = ConfigHelper.ReadSetting("Password");
@@ -202,8 +202,8 @@ $@"
         {
             // Przełącz między Topmost i !Topmost
             Topmost = !Topmost;
-            if (!Topmost) aot.Background= new SolidColorBrush(Colors.Transparent);
-            else aot.Background = new SolidColorBrush(Colors.Black);
+            //if (!Topmost) aot.Background= new SolidColorBrush(Colors.Transparent);
+            //else aot.Background = new SolidColorBrush(Colors.Black);
 
         }
 
@@ -263,9 +263,18 @@ $@"
             gifImage.UriSource = new Uri("resources/spinner.gif", UriKind.RelativeOrAbsolute);
             gifImage.EndInit();
 
-
-            ConnectionIndicator.Visibility = Visibility.Visible;
-            address.Width = 212;
+            void SetAddressColumnSpan(bool isIconVisible)
+            {
+                if (isIconVisible)
+                {
+                    Grid.SetColumnSpan(address, 1); // Jeśli ikona jest widoczna, ustaw ColumnSpan na 1
+                }
+                else
+                {
+                    Grid.SetColumnSpan(address, 2); // Jeśli ikona jest niewidoczna, ustaw ColumnSpan na 2
+                }
+            }
+            SetAddressColumnSpan(true);
             ImageBehavior.SetAnimatedSource(ConnectionIndicator, gifImage);
 
             string baseLink = address.Text;
@@ -288,14 +297,14 @@ $@"
                 bitmap.BeginInit();
                 if (Shkrape.connected == false)
                 {
-                    address.Width = 212;
+                    SetAddressColumnSpan(true);
                     bitmap.UriSource = new Uri("resources/checkmark_red.png", UriKind.RelativeOrAbsolute);
                     ImageBehavior.SetAnimatedSource(ConnectionIndicator, bitmap);
                     
                 }
                 else if (Shkrape.connected == true)
                 {
-                    address.Width = 212;
+                    SetAddressColumnSpan(true);
                     bitmap.UriSource = new Uri("resources/checkmark_green.png", UriKind.RelativeOrAbsolute);
                     ImageBehavior.SetAnimatedSource(ConnectionIndicator, bitmap);
                     
@@ -306,7 +315,8 @@ $@"
             {
                 await Task.Delay(1000);
                 ImageBehavior.SetAnimatedSource(ConnectionIndicator, null);
-                address.Width = 246;
+                address.Width = address.Width + ConnectionIndicator.Width;
+                SetAddressColumnSpan(false);
 
             }
         }
