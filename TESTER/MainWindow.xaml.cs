@@ -68,10 +68,8 @@ namespace TESTER
             if (this.WindowState == WindowState.Normal)
             {
                 // Ustaw współczynnik skalowania dla szerokości i wysokości
-                double widthScalingFactor = 0.5;
-                double heightScalingFactor = 0.5;
-                double newWidth = this.ActualWidth + (e.HorizontalChange * widthScalingFactor);
-                double newHeight = this.ActualHeight + (e.VerticalChange * heightScalingFactor);
+                double newWidth = this.ActualWidth + (e.HorizontalChange );
+                double newHeight = this.ActualHeight + (e.VerticalChange);
 
                 // Ogranicz nowy rozmiar okna do maksymalnego rozmiaru ekranu
                 double maxWidth = SystemParameters.WorkArea.Width;
