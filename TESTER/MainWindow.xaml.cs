@@ -23,6 +23,8 @@ using Newtonsoft.Json;
 using TESTER.Utils;
 using WpfAnimatedGif;
 using System.Diagnostics.Eventing.Reader;
+using System.Runtime.InteropServices;
+
 
 namespace TESTER
 {
@@ -32,12 +34,17 @@ namespace TESTER
     public partial class MainWindow : Window
     {
         private readonly Scroller _scroller;
+        private bool isResizing = false;
+        private Point lastMousePosition;
+
 
         public MainWindow()
         {
 
             InitializeComponent();
             this.ResizeMode = ResizeMode.CanMinimize;
+            _scroller = new Scroller(this);
+
 
             //update or create config
             ConfigHelper.CreateConfigFile();
@@ -51,10 +58,29 @@ namespace TESTER
             pwd.Text = ConfigHelper.ReadSetting("Password");
             browserComboBox.Text = ConfigHelper.ReadSetting("Browser");
 
-            _scroller = new Scroller(this);
+
 
             Credits.Text = this.Title.ToString() + " By: Szymon Bogus";
 
+        }
+        private void customResizeGrip_DragDelta(object sender, System.Windows.Controls.Primitives.DragDeltaEventArgs e)
+        {
+            if (this.WindowState == WindowState.Normal)
+            {
+                // Ustaw współczynnik skalowania dla szerokości i wysokości
+                double widthScalingFactor = 0.5;
+                double heightScalingFactor = 0.5;
+                double newWidth = this.ActualWidth + (e.HorizontalChange * widthScalingFactor);
+                double newHeight = this.ActualHeight + (e.VerticalChange * heightScalingFactor);
+
+                // Ogranicz nowy rozmiar okna do maksymalnego rozmiaru ekranu
+                double maxWidth = SystemParameters.WorkArea.Width;
+                double maxHeight = SystemParameters.WorkArea.Height;
+
+                // Sprawdź minimalne i maksymalne wymiary okna przed skalowaniem
+                this.Width = Math.Max(this.MinWidth, Math.Min(newWidth, maxWidth));
+                this.Height = Math.Max(this.MinHeight, Math.Min(newHeight, maxHeight));
+            }
         }
 
 
