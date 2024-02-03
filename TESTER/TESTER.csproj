@@ -29,6 +29,7 @@
     <None Remove="resources\checkmark_red.png" />
     <None Remove="resources\clear.png" />
     <None Remove="resources\copy.png" />
+    <None Remove="resources\corner.png" />
     <None Remove="resources\get.png" />
     <None Remove="resources\icon.ico" />
     <None Remove="resources\save.png" />
@@ -37,6 +38,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="resources\corner.png" />
     <Resource Include="resources\icon.ico" />
   </ItemGroup>
 
