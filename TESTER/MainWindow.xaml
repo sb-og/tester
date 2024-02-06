@@ -4,7 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:sys="clr-namespace:System;assembly=mscorlib"
     Title="Tester v2.0"
-    Width="600"
+    Width="625"
     Height="325"
     MinWidth="420"
     MinHeight="345"
@@ -15,14 +15,14 @@
     <Window.Resources>
         <!--  Control colors.  -->
         <Color x:Key="WindowColor">#252c3d</Color>
-        <Color x:Key="ContentAreaColorLight">#283659</Color>
-        <Color x:Key="ContentAreaColorDark">#283659</Color>
+        <Color x:Key="ContentAreaColorLight">#883659</Color>
+        <Color x:Key="ContentAreaColorDark">#883659</Color>
 
         <Color x:Key="DisabledControlLightColor">#FFE8EDF9</Color>
-        <Color x:Key="DisabledControlDarkColor">#283659</Color>
+        <Color x:Key="DisabledControlDarkColor">#883659</Color>
         <Color x:Key="DisabledForegroundColor">#FF888888</Color>
-
-        <Color x:Key="SelectedBackgroundColor">#283659</Color>
+<!--kolor podswietlenia pozycji listy-->
+        <Color x:Key="SelectedBackgroundColor">#083659</Color> 
         <Color x:Key="SelectedUnfocusedColor">#FFDDDDDD</Color>
 
         <Color x:Key="ControlLightColor">#252c3d</Color>
@@ -50,13 +50,13 @@
         <Color x:Key="DefaultBorderBrushDarkColor">Black</Color>
 
         <!--  Control-specific resources.  -->
-        <Color x:Key="HeaderTopColor">#252c3d</Color>
+        <Color x:Key="HeaderTopColor">#852c3d</Color>
         <Color x:Key="DatagridCurrentCellBorderColor">Black</Color>
         <Color x:Key="SliderTrackDarkColor">#0a121f</Color>
 
         <Color x:Key="NavButtonFrameColor">#0a121f</Color>
 
-        <LinearGradientBrush x:Key="MenuPopupBrush" StartPoint="0.5,0" EndPoint="0.5,1">
+        <LinearGradientBrush x:Key="MenuPopupBrush" StartPoint="0, 0" EndPoint="0,0">
             <GradientStop Offset="0" Color="{DynamicResource ControlLightColor}" />
             <GradientStop Offset="0.5" Color="{DynamicResource ControlMediumColor}" />
             <GradientStop Offset="1" Color="{DynamicResource ControlLightColor}" />
@@ -159,7 +159,6 @@
                 </VisualStateManager.VisualStateGroups>
             </Grid>
         </ControlTemplate>
-
         <ControlTemplate x:Key="ComboBoxTextBox" TargetType="{x:Type TextBox}">
             <Border
                 x:Name="PART_ContentHost"
@@ -212,13 +211,13 @@
                                 Focusable="False"
                                 IsOpen="{TemplateBinding IsDropDownOpen}"
                                 Placement="Bottom"
-                                PopupAnimation="Slide">
+                                PopupAnimation="Scroll">
                                 <Grid
                                     x:Name="DropDown"
                                     MinWidth="{TemplateBinding ActualWidth}"
                                     MaxHeight="{TemplateBinding MaxDropDownHeight}"
                                     SnapsToDevicePixels="True">
-                                    <Border x:Name="DropDownBorder" BorderThickness="1">
+                                    <Border x:Name="DropDownBorder" BorderThickness="0">
                                         <Border.BorderBrush>
                                             <SolidColorBrush Color="{DynamicResource BorderMediumColor}" />
                                         </Border.BorderBrush>
@@ -266,8 +265,8 @@
                                 <Setter Property="ScrollViewer.CanContentScroll" Value="false" />
                             </Trigger>
                             <Trigger SourceName="Popup" Property="AllowsTransparency" Value="true">
-                                <Setter TargetName="DropDownBorder" Property="CornerRadius" Value="4" />
-                                <Setter TargetName="DropDownBorder" Property="Margin" Value="0,2,0,0" />
+                                <Setter TargetName="DropDownBorder" Property="CornerRadius" Value="1" />
+                                <Setter TargetName="DropDownBorder" Property="Margin" Value="0,0,0,0" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -473,7 +472,7 @@
                                 Width="20"
                                 Height="24"
                                 Margin="1,1,1,1"
-                                HorizontalAlignment="Right" />
+                                />
                         </Grid>
 
                         <!--  Browser comboBox  -->
@@ -491,8 +490,8 @@
                         <!--  dane usera  -->
                         <Grid Grid.Column="1" HorizontalAlignment="Stretch">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="4*" />
-                                <ColumnDefinition Width="4*" />
+                                <ColumnDefinition Width="4.5*" />
+                                <ColumnDefinition Width="4.5*" />
                                 <ColumnDefinition Width="1*" />
                             </Grid.ColumnDefinitions>
                             <TextBox
@@ -671,11 +670,11 @@
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <!--  Dla TextBlock "Opis ścieżki:"  -->
-                                <RowDefinition Height="*" />
+                                <RowDefinition Height="1*" MinHeight="22"/>
                                 <!--  Dla TextBox "path"  -->
                                 <RowDefinition Height="Auto" />
                                 <!--  Dla TextBlock "Rezultat Testu:"  -->
-                                <RowDefinition Height="*" />
+                                <RowDefinition Height="2*" />
                                 <!--  Dla TextBox "desc"  -->
                             </Grid.RowDefinitions>
 
@@ -697,7 +696,7 @@
                                 Background="#252c3d"
                                 Foreground="White"
                                 TextWrapping="Wrap"
-                                VerticalScrollBarVisibility="Auto" />
+                                VerticalScrollBarVisibility="Hidden" />
 
                             <!--  TextBlock "Rezultat Testu:"  -->
                             <TextBlock
@@ -717,7 +716,7 @@
                                 Background="#252c3d"
                                 Foreground="White"
                                 TextWrapping="Wrap"
-                                VerticalScrollBarVisibility="Auto" />
+                                VerticalScrollBarVisibility="Hidden" />
                         </Grid>
                     </DockPanel>
                 </Grid>
