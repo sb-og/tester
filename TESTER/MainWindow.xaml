@@ -8,6 +8,8 @@
     Height="325"
     MinWidth="420"
     MinHeight="345"
+    MaxWidth="3840"
+    MaxHeight="2160"
     AllowsTransparency="True"
     ResizeMode="CanResizeWithGrip"
     WindowStyle="None">
@@ -391,7 +393,9 @@
                     DockPanel.Dock="Left"
                     FontSize="9"
                     Opacity="0.5"
-                    TextWrapping="Wrap" />
+                    TextWrapping="Wrap" 
+                    Margin="3,1,1,1"/>
+                    
                 <Thumb
                     x:Name="customResizeGrip"
                     Width="16"
@@ -434,6 +438,7 @@
                                 <ColumnDefinition Width="1*" />
                             </Grid.ColumnDefinitions>
                             <TextBox
+                                VerticalContentAlignment="Center"
                                 x:Name="address"
                                 Grid.Column="0"
                                 Grid.ColumnSpan="2"
@@ -557,7 +562,9 @@
                                 MinWidth="24"
                                 Margin="1,1,1,1"
                                 Background="#252c3d"
-                                Click="SaveUserButton_Click">
+                                Click="SaveUserButton_Click"
+                                Padding="0,0,0,0">
+                                
                                 <Image
                                     Grid.Column="2"
                                     Width="20"
@@ -579,6 +586,7 @@
                         <!--  pesel  -->
                         <Grid>
                             <TextBox
+                                VerticalContentAlignment="Center"
                                 x:Name="pesel"
                                 Height="24"
                                 Margin="1,1,1,1"
@@ -614,6 +622,7 @@
                                 <ColumnDefinition Width="160*" />
                             </Grid.ColumnDefinitions>
                             <TextBox
+                                VerticalContentAlignment="Center"
                                 x:Name="jos"
                                 Grid.ColumnSpan="2"
                                 Height="24"
@@ -626,6 +635,7 @@
                                 Tag="JOS"
                                 TextWrapping="Wrap" />
                             <Label
+                                VerticalContentAlignment="Center"
                                 Grid.ColumnSpan="2"
                                 Height="24"
                                 Margin="1,1,1,1"
