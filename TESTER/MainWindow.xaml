@@ -410,10 +410,12 @@
 
                 <TextBlock
                     x:Name="Credits"
+                    Margin="6,1,1,1"
                     DockPanel.Dock="Left"
                     FontSize="9"
                     Opacity="0.5"
                     TextWrapping="Wrap" />
+
                 <Thumb
                     x:Name="customResizeGrip"
                     Width="16"

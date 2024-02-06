@@ -13,7 +13,6 @@ public static class ConfigHelper
         { "Password", "ADMIN" },
         { "Topmost", "False" },
         { "Browser", "Edge" },
-        { "Theme", "Dark" },
         { "InstaFill", "False" },  
         { "WarnOnExit", "False" }  
         // Dodaj kolejne domyślne ustawienia w formie par klucz-wartość
