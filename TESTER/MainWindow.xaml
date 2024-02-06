@@ -635,10 +635,8 @@
                                 Tag="JOS"
                                 TextWrapping="Wrap" />
                             <Label
-                                VerticalContentAlignment="Center"
                                 Grid.ColumnSpan="2"
                                 Height="24"
-                                Margin="1,1,1,1"
                                 Content="JOS"
                                 Foreground="Gray"
                                 IsHitTestVisible="False">
