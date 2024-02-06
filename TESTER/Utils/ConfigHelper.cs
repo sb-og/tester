@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 
 public static class ConfigHelper
 {
-    private const string ConfigFilePath = "config.json";
+    public const string ConfigFilePath = "config.json";
 
     private static Dictionary<string, string> DefaultSettings = new Dictionary<string, string>
     {
@@ -13,7 +13,9 @@ public static class ConfigHelper
         { "Password", "ADMIN" },
         { "Topmost", "False" },
         { "Browser", "Edge" },
-        { "Theme", "Dark" }  // Domyślny motyw ustawiony na "Dark"
+        { "Theme", "Dark" },
+        { "InstaFill", "False" },  
+        { "WarnOnExit", "False" }  
         // Dodaj kolejne domyślne ustawienia w formie par klucz-wartość
     };
 

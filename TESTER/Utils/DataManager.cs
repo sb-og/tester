@@ -11,7 +11,7 @@ namespace TESTER.Utils
 
         public static string AdresBazyDanych;
         public static string NrRewizji;
-        public static string IsUpToDate;
+        //public static string IsUpToDate;
 
 
         // Metoda do przetwarzania buildJson
@@ -36,7 +36,7 @@ namespace TESTER.Utils
                 // Pobieranie wartości z JSON-a i przypisywanie do zmiennych globalnych
                 AdresBazyDanych = serviceJson["additionalData"]["AMMS_BIALA"]["return"].ToString();
                 NrRewizji = serviceJson["additionalData"]["SVN_REVISION"]["return"].ToString();
-                IsUpToDate = serviceJson["status"].ToString();
+                //IsUpToDate = serviceJson["status"].ToString();
             }
             catch (Exception ex)
             {

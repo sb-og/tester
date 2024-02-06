@@ -24,6 +24,7 @@ using TESTER.Utils;
 using WpfAnimatedGif;
 using System.Diagnostics.Eventing.Reader;
 using System.Runtime.InteropServices;
+using System.CodeDom;
 
 
 namespace TESTER
@@ -51,9 +52,6 @@ namespace TESTER
 
             //Load settings
             Topmost = bool.Parse(ConfigHelper.ReadSetting("Topmost"));
-            //if (!Topmost) aot.Background= new SolidColorBrush(Colors.Transparent);
-            //else aot.Background = new SolidColorBrush(Colors.Black);
-
             user.Text = ConfigHelper.ReadSetting("User");
             pwd.Text = ConfigHelper.ReadSetting("Password");
             browserComboBox.Text = ConfigHelper.ReadSetting("Browser");
@@ -62,6 +60,81 @@ namespace TESTER
 
             Credits.Text = this.Title.ToString() + " By: Szymon Bogus";
 
+
+            AddMenuItem("Zapisz", MenuSave_Click);
+            AddMenuItem("Zawsze na wierzchu", MenuAlwaysOnTop_Click);
+            AddMenuItem("Sprawdź aktualizacje", MenuCheckUpdates_Click);
+            AddMenuItem("Otwórz config", MenuOpenConfig_Click);
+        }
+
+        private void Menu_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            // Sprawdź, czy menu kontekstowe istnieje i nie jest już otwarte
+            if (menu.ContextMenu != null && !menu.ContextMenu.IsOpen)
+            {
+                // Otwórz menu kontekstowe
+                menu.ContextMenu.PlacementTarget = sender as Button;
+                menu.ContextMenu.IsOpen = true;
+
+                // Zablokuj dalsze przetwarzanie zdarzenia, aby uniknąć wywołania Click
+                e.Handled = true;
+            }
+        }
+        private void AddMenuItem(string header, RoutedEventHandler handler)
+        {
+            var menuItem = new MenuItem { Header = header };
+            menuItem.Click += handler; // Przypisanie obsługi zdarzeń
+            menu.ContextMenu.Items.Add(menuItem); // Dodawanie do menu kontekstowego
+        }
+        private void MenuSave_Click(object sender, RoutedEventArgs e)
+        {
+            ConfigHelper.SaveSetting("Browser", browserComboBox.Text);
+
+            string key1 = "User";
+            string value1 = user.Text;
+            ConfigHelper.SaveSetting(key1, value1);
+
+            string key2 = "Password";
+            string value2 = pwd.Text;
+            ConfigHelper.SaveSetting(key2, value2);
+        }
+
+        private void MenuAlwaysOnTop_Click(object sender, RoutedEventArgs e)
+        {
+            // Logika dla "Zawsze na wierzchu" - przełączanie trybu zawsze na wierzchu
+            var window = Application.Current.MainWindow;
+            window.Topmost = !window.Topmost; // Przełączanie wartości
+        }
+
+        private void MenuCheckUpdates_Click(object sender, RoutedEventArgs e)
+        {
+            // Logika dla "Sprawdź aktualizacje"
+        }
+
+        private void MenuOpenConfig_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                // Sprawdzenie, czy plik istnieje
+                if (File.Exists(ConfigHelper.ConfigFilePath))
+                {
+                    // Otwarcie pliku w domyślnym edytorze tekstu
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = ConfigHelper.ConfigFilePath,
+                        UseShellExecute = true // Wymagane dla .NET Core/.NET 5/6+
+                    });
+                }
+                else
+                {
+                    MessageBox.Show($"Plik {ConfigHelper.ConfigFilePath} nie istnieje.", "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Obsługa błędów, np. wyświetlenie komunikatu
+                MessageBox.Show($"Wystąpił problem podczas otwierania pliku: {ex.Message}", "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
         private void customResizeGrip_DragDelta(object sender, System.Windows.Controls.Primitives.DragDeltaEventArgs e)
         {
@@ -113,36 +186,40 @@ namespace TESTER
             return "";
 
         }
-        private async void Button_Click(object sender, RoutedEventArgs e)
-        {
 
-            output.Text = null;
+        private async void autoUpdateOutput(object sender, RoutedEventArgs e)
+        {
+            if (ConfigHelper.ReadSetting("InstaFill")=="True")
+            {
+                updateOutput(sender,e);
+            }
+
+        }
+        private async void updateOutput(object sender, RoutedEventArgs e)
+        {
+            await Task.Delay(1);
             string ip = address.Text;
-            string patient = pac.Text;
-            string unit = jos.Text;
-            string description = desc.Text;
-            string nrpesel = pesel.Text;
-            string testdesc = desc.Text;
-            //stare uzupełnianie przeglądarki    string webengine = browser.Text.Replace(Environment.NewLine, " '
             string idkjos = jos.Text;
+            string pacjent = pac.Text;
+            string jednostka = jos.Text;
+            string sciezka = path.Text;
+            string opis = desc.Text;
+            string nrpesel = pesel.Text;
+            string podsumowanie = desc.Text;
+
+            //stare uzupełnianie przeglądarki    string webengine = browser.Text.Replace(Environment.NewLine, " '
             string username = user.Text;
             string password = pwd.Text;
-            string steps = path.Text;
+
+            //Dane przypadku testowego
+            string IdPacjenta = ExtractCaseData(pacjent, 0); // Identyfikator pacjenta
+            string IdOpieki = ExtractCaseData(pacjent, 1); // Identyfikator opieki
+            string idPob = ExtractCaseData(pacjent, 2); // Identyfikator pobytu
+            string IdZlec = ExtractCaseData(pacjent, 3); // Identyfikator zlecenia
+
 
             string webengine;
             string selectedBrowser;
-
-
-            //Dane przypadku testowego
-            string IdPacjenta = ExtractCaseData(patient, 0); // Identyfikator pacjenta
-            string IdOpieki = ExtractCaseData(patient, 1); // Identyfikator opieki
-            string idPob = ExtractCaseData(patient, 2); // Identyfikator pobytu
-            string IdZlec = ExtractCaseData(patient, 3); // Identyfikator zlecenia
-
-
-
-            // Pobierz bazowy link z pola tekstowego "address"
-
             if (browserComboBox.SelectedItem != null)
             {
                 // Pobierz tekst z wybranego elementu ComboBox
@@ -195,10 +272,10 @@ output.Text +=
 $@"
 
 *3. Kroki postępowania:*
-|Ścieżka:|{steps}|
+|Ścieżka:|{sciezka}|
 
 *4. Uzyskany rezultat*
-{description}
+{podsumowanie}
 ";
                 }
             }
@@ -206,28 +283,23 @@ $@"
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
-            Close();
-        }
 
-        private void SaveUserButton_Click(object sender, RoutedEventArgs e)
-        {
-            ConfigHelper.SaveSetting("Browser", browserComboBox.Text);
+            if (ConfigHelper.ReadSetting("WarnOnExit") == "True" )
+            {
+                var result = MessageBox.Show("Zamknięcie okna spowoduje utratę wprowadzonych danych", "Uwaga", MessageBoxButton.OKCancel, MessageBoxImage.None);
 
-            string key1 = "User";
-            string value1 = user.Text;
-            ConfigHelper.SaveSetting(key1, value1);
-
-            string key2 = "Password";
-            string value2 = pwd.Text;
-            ConfigHelper.SaveSetting(key2, value2);
-        }
-
-        private void OnTopButton_Click(object sender, RoutedEventArgs e)
-        {
-            // Przełącz między Topmost i !Topmost
-            Topmost = !Topmost;
-            //if (!Topmost) aot.Background= new SolidColorBrush(Colors.Transparent);
-            //else aot.Background = new SolidColorBrush(Colors.Black);
+                if (result == MessageBoxResult.OK)
+                {
+                    // Logika zapisywania zmian
+                    this.Close(); // Zamknij okno tylko jeśli użytkownik zdecydował się zapisać zmiany
+                }
+                else if (result == MessageBoxResult.Cancel)
+                {
+                    return;
+                }
+                this.Close();
+            }
+            this.Close();
 
         }
 
@@ -270,13 +342,27 @@ $@"
 
         private void ClearButton_Click(object sender, RoutedEventArgs e)
         {
+            address.Text = string.Empty;
+
+            pac.Text = "Identyfikator pacjenta: \nIdentyfikator opieki: \nIdentyfikator pobytu: \nIdentyfikator zlecenia: ";
+
             pesel.Text = string.Empty;
             jos.Text = string.Empty;
-            pac.Text = "Identyfikator pacjenta: \nIdentyfikator opieki: \nIdentyfikator pobytu: \nIdentyfikator zlecenia: ";
+
             path.Text = string.Empty; 
             desc.Text = string.Empty;
-            address.Text = string.Empty;
+
+
+            DataManager.NrRewizji = string.Empty;   
+            DataManager.AdresBazyDanych = string.Empty; 
+            DataManager.NrKompilacji = string.Empty;
+            DataManager.DataKompilacji = string.Empty;
+            DataManager.AdresBazyDanych = string.Empty;
+
+
             ImageBehavior.SetAnimatedSource(ConnectionIndicator, null);
+
+            output.Text = string.Empty;
         }
 
 
@@ -343,6 +429,11 @@ $@"
                 SetAddressColumnSpan(false);
 
             }
+        }
+
+        private void MinimizeButton_Click(object sender, RoutedEventArgs e)
+        {
+             this.WindowState = WindowState.Minimized;
         }
     }
 }
