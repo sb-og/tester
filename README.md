@@ -2,17 +2,14 @@
 	zmiany przycisków - dodanie wyczyść wszystko i usunięćie pobierz
 	zaznaczanie tekstu po focusie pola
 	wyswietlanie tylko linijek gdzie wprowadzono dane
-
 	czyszczenie pola z adresem
 	brak czyszczenia outputa
-
 	Obsługa id_zlec i id_pob
-
 	tooltip przycisku topmost
-	
 	zmiana domyslnej wartosci topmost na false
-  przezentacja linków z []
+ 	przezentacja linków z []
 	zmiany w gridach, dodanie verticalstack i horizontalstac
+
 
  dodac horizontal content alignment do pól pesel i jos
  wylaczyc widocznosc scrollbar w polu sciezka i opis
