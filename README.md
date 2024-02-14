@@ -13,6 +13,9 @@
 	zmiana domyslnej wartosci topmost na false
   przezentacja linków z []
 	zmiany w gridach, dodanie verticalstack i horizontalstac
+
+ dodac horizontal content alignment do pól pesel i jos
+ wylaczyc widocznosc scrollbar w polu sciezka i opis
    
 wylaczyc autozaznaczanie na polu output
 	
