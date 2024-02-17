@@ -5,9 +5,9 @@
     xmlns:sys="clr-namespace:System;assembly=mscorlib"
     Title="Tester v2.0"
     Width="600"
-    Height="325"
-    MinWidth="420"
-    MinHeight="345"
+    Height="400"
+    MinWidth="475 "
+    MinHeight="375"
     AllowsTransparency="True"
     ResizeMode="CanResizeWithGrip"
     WindowStyle="None">
@@ -458,6 +458,7 @@
                                 <ColumnDefinition Width="1*" />
                             </Grid.ColumnDefinitions>
                             <TextBox
+                                VerticalContentAlignment="Center"
                                 x:Name="address"
                                 Grid.Column="0"
                                 Grid.ColumnSpan="2"
@@ -505,6 +506,7 @@
                             Height="24"
                             Margin="1,1,1,1"
                             HorizontalAlignment="Stretch"
+                            VerticalContentAlignment="Center"
                             VerticalAlignment="Stretch">
                             <ComboBoxItem Content="Firefox" />
                             <ComboBoxItem Content="Chrome" />
@@ -679,7 +681,7 @@
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <!--  Dla TextBlock "Opis ścieżki:"  -->
-                                <RowDefinition Height="*" />
+                                <RowDefinition Height="0.5*" />
                                 <!--  Dla TextBox "path"  -->
                                 <RowDefinition Height="Auto" />
                                 <!--  Dla TextBlock "Rezultat Testu:"  -->
@@ -689,6 +691,7 @@
 
                             <!--  TextBlock "Opis ścieżki:"  -->
                             <TextBlock
+                      
                                 Grid.Row="0"
                                 Margin="1,1,1,1"
                                 VerticalAlignment="Top"
@@ -697,6 +700,7 @@
 
                             <!--  TextBox "path"  -->
                             <TextBox
+                                MinHeight="24"
                                 x:Name="path"
                                 Grid.Row="1"
                                 Margin="1,1,1,1"
@@ -735,7 +739,7 @@
             </DockPanel>
 
             <!--  Prawa Strona  -->
-            <DockPanel Grid.Column="1" Margin="0,3,3,3">
+            <DockPanel Grid.Column="1" Margin="0,3,3,3" MinWidth="275">
 
                 <!--  Przyciski prawej strony  -->
                 <Grid
@@ -797,7 +801,7 @@
                         PreviewMouseLeftButtonDown="TextBox_PreviewMouseLeftButtonDown"
                         TextWrapping="Wrap" />
                     <Label
-                        Content="Kliknij &quot;Generuj&quot; aby wygenerować podsumowanie testu."
+                        Content="Kliknij &quot;Generuj&quot; aby wygenerować podsumowanie"
                         Foreground="Gray"
                         IsHitTestVisible="False">
                         <Label.Style>
