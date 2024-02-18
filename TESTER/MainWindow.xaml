@@ -795,7 +795,6 @@
                         x:Name="output"
                         Background="#252c3d"
                         Foreground="White"
-                        GotKeyboardFocus="TextBox_GotFocus"
                         PreviewMouseLeftButtonDown="TextBox_PreviewMouseLeftButtonDown"
                         TextWrapping="Wrap" />
                     <Label
