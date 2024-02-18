@@ -587,6 +587,7 @@
                         <!--  pesel  -->
                         <Grid>
                             <TextBox
+                                VerticalContentAlignment='Center'
                                 x:Name="pesel"
                                 Height="24"
                                 Margin="1,1,1,1"
@@ -618,11 +619,8 @@
                         </Grid>
                         <!--  jos  -->
                         <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="83*" />
-                                <ColumnDefinition Width="160*" />
-                            </Grid.ColumnDefinitions>
                             <TextBox
+                                VerticalContentAlignment='Center'
                                 x:Name="jos"
                                 Grid.ColumnSpan="2"
                                 Height="24"
@@ -700,6 +698,7 @@
 
                             <!--  TextBox "path"  -->
                             <TextBox
+                                VerticalScrollBarVisibility="Hidden"
                                 MinHeight="24"
                                 x:Name="path"
                                 Grid.Row="1"
@@ -709,8 +708,7 @@
                                 Background="#252c3d"
                                 Foreground="White"
                                 TextChanged="autoUpdateOutput"
-                                TextWrapping="Wrap"
-                                VerticalScrollBarVisibility="Auto" />
+                                TextWrapping="Wrap" />
 
                             <!--  TextBlock "Rezultat Testu:"  -->
                             <TextBlock
@@ -731,7 +729,7 @@
                                 Foreground="White"
                                 TextChanged="autoUpdateOutput"
                                 TextWrapping="Wrap"
-                                VerticalScrollBarVisibility="Auto" />
+                                VerticalScrollBarVisibility="Hidden" />
                         </Grid>
                     </DockPanel>
                 </Grid>
