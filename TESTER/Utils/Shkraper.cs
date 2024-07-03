@@ -15,60 +15,52 @@ namespace TESTER.Utils
         {
             try
             {
+                // Trim the trailing slash and "index.html" if present
                 string linkWithoutIndex = link.TrimEnd('/');
                 if (linkWithoutIndex.EndsWith("index.html"))
                 {
-                    linkWithoutIndex = linkWithoutIndex.Substring(0, linkWithoutIndex.Length - "index.html".Length);
+                    linkWithoutIndex = linkWithoutIndex[..^"index.html".Length];
                 }
 
-                if (Uri.IsWellFormedUriString(linkWithoutIndex, UriKind.Absolute))
+                if (!Uri.IsWellFormedUriString(linkWithoutIndex, UriKind.Absolute))
                 {
-                    string sourceFilePath = "/mspa/anboot/build.json";
-                    string postPath = "/rest/shellService/prepareSystemInfoViewInfo?spinner=disabled";
-
-                    UriBuilder uriBuilder = new UriBuilder(linkWithoutIndex);
-                    uriBuilder.Path += sourceFilePath;
-                    string fullLink = uriBuilder.Uri.ToString();
-
-                    using (HttpClient client = new HttpClient())
-                    {
-                        // Ustaw timeout na 30 sekund
-                        client.Timeout = TimeSpan.FromSeconds(30);
-
-                        string buildJsonString = await client.GetStringAsync(fullLink);
-                        buildJson = JObject.Parse(buildJsonString);
-                    }
-
-                    string postLink = linkWithoutIndex + postPath;
-                    string postData = "{\"userId\":\"1\"}";
-
-                    using (HttpClient client = new HttpClient())
-                    {
-                        // Ustaw timeout na 30 sekund
-                        client.Timeout = TimeSpan.FromSeconds(30);
-
-                        StringContent content = new StringContent(postData);
-                        content.Headers.ContentType.MediaType = "application/json";
-                        string serviceJsonString = await client.PostAsync(postLink, content).Result.Content.ReadAsStringAsync();
-                        serviceJson = JObject.Parse(serviceJsonString);
-                    }
-                    connected = true;
+                    connected = false;
+                    return;
                 }
-                else
-                {
-                    connected=false;
-                }
+
+                string sourceFilePath = "/mspa/anboot/build.json";
+                string postPath = "/rest/shellService/prepareSystemInfoViewInfo?spinner=disabled";
+
+                // Construct the full URI for GET request
+                string fullLink = new Uri(new Uri(linkWithoutIndex), sourceFilePath).ToString();
+                string postLink = new Uri(new Uri(linkWithoutIndex), postPath).ToString();
+
+                using HttpClient client = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+
+                // GET request to fetch build.json
+                string buildJsonString = await client.GetStringAsync(fullLink);
+                buildJson = JObject.Parse(buildJsonString);
+
+                // POST request to fetch serviceJson
+                string postData = "{\"userId\":\"1\"}";
+                await Task.Delay(1000000);
+                StringContent content = new StringContent(postData, System.Text.Encoding.UTF8, "application/json");
+                string serviceJsonString = await client.PostAsync(postLink, content).Result.Content.ReadAsStringAsync();
+                serviceJson = JObject.Parse(serviceJsonString);
+
+                connected = true;
             }
             catch (HttpRequestException ex)
             {
-                Console.WriteLine($"Błąd HttpRequestException: {ex.Message}\n");
+                Console.WriteLine($"HttpRequestException error: {ex.Message}\n");
                 connected = false;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Inny błąd: {ex.Message}\n");
+                Console.WriteLine($"Other error: {ex.Message}\n");
                 connected = false;
             }
+
         }
     }
 }

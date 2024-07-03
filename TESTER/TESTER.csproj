@@ -22,12 +22,14 @@
     <Compile Remove="Extractor.cs" />
     <Compile Remove="resources\template.cs" />
     <Compile Remove="TestHarnessInfo.cs" />
+    <Compile Remove="Utils\Shkraper.cs" />
   </ItemGroup>
 
   <ItemGroup>
     <None Remove="customFunctions.js" />
     <None Remove="resources\checkmark_green.png" />
     <None Remove="resources\checkmark_red.png" />
+    <None Remove="resources\checkmark_yellow.png" />
     <None Remove="resources\clear.png" />
     <None Remove="resources\copy.png" />
     <None Remove="resources\corner.png" />
@@ -59,6 +61,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="resources\checkmark_red.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="resources\checkmark_yellow.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="resources\spinner.gif">

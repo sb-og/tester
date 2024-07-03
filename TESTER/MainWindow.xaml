@@ -497,7 +497,8 @@
                                 Width="20"
                                 Height="24"
                                 Margin="1,1,1,1"
-                                HorizontalAlignment="Stretch" />
+                                HorizontalAlignment="Stretch" 
+                                MouseLeftButtonUp="ConnectionIndicator_MouseLeftButtonUp"/>
                         </Grid>
 
                         <!--  Browser comboBox  -->

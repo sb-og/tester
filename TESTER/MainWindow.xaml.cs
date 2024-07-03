@@ -307,23 +307,6 @@ $@"
         {
             Clipboard.SetText(output.Text);
         }
-        private async void ScrapeButton_Click(object sender, RoutedEventArgs e)
-        {
-            string baseLink = address.Text;
-            await Shkrape.ScrapeDataAsync(baseLink);
-
-            try
-            {
-                output.Text = Shkrape.buildJson.ToString();
-                output.Text += Shkrape.serviceJson.ToString();
-            }
-            catch (Exception ex)
-            {
-                output.Text = $"Wystąpił nieoczekiwany błąd: {ex.Message}";
-                return;
-            }
-
-        }
         private void TextBox_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             TextBox textBox = sender as TextBox;
@@ -368,68 +351,73 @@ $@"
 
         private async void address_TextChanged(object sender, TextChangedEventArgs e)
         {
-            var gifImage = new BitmapImage();
-            gifImage.BeginInit();
-            gifImage.UriSource = new Uri("resources/spinner.gif", UriKind.RelativeOrAbsolute);
-            gifImage.EndInit();
+            DataManager.NrRewizji = string.Empty;
+            DataManager.AdresBazyDanych = string.Empty;
+            DataManager.NrKompilacji = string.Empty;
+            DataManager.DataKompilacji = string.Empty;
+            DataManager.AdresBazyDanych = string.Empty;
+
+            // Ustawienie wskaźnika ładowania (spinner)
+            var gifImage = new BitmapImage(new Uri("resources/spinner.gif", UriKind.RelativeOrAbsolute));
+            ImageBehavior.SetAnimatedSource(ConnectionIndicator, gifImage);
 
             void SetAddressColumnSpan(bool isIconVisible)
             {
-                if (isIconVisible)
-                {
-                    Grid.SetColumnSpan(address, 1); // Jeśli ikona jest widoczna, ustaw ColumnSpan na 1
-                }
-                else
-                {
-                    Grid.SetColumnSpan(address, 2); // Jeśli ikona jest niewidoczna, ustaw ColumnSpan na 2
-                }
+                Grid.SetColumnSpan(address, isIconVisible ? 1 : 2);
             }
+
             SetAddressColumnSpan(true);
-            ImageBehavior.SetAnimatedSource(ConnectionIndicator, gifImage);
 
             string baseLink = address.Text;
-            if (baseLink != string.Empty)
+            if (!string.IsNullOrEmpty(baseLink))
             {
                 try
                 {
-                    await Shkrape.ScrapeDataAsync(baseLink);
+                    // Pobranie danych
+                    var (buildJsonLoaded, serviceJsonLoaded) = await DataManager.ScrapeDataAsync(baseLink);
                     await Task.Delay(1000);
-                    DataManager.ProcessBuildJson(Shkrape.buildJson);
-                    DataManager.ProcessServiceJson(Shkrape.serviceJson);
+
+                    // Ustawienie odpowiedniego wskaźnika w zależności od stanu połączenia
+                    var bitmap = new BitmapImage();
+                    bitmap.BeginInit();
+
+                    if (!buildJsonLoaded && !serviceJsonLoaded)
+                    {
+                        bitmap.UriSource = new Uri("resources/checkmark_red.png", UriKind.RelativeOrAbsolute);
+                    }
+                    else if (buildJsonLoaded && !serviceJsonLoaded)
+                    {
+                        bitmap.UriSource = new Uri("resources/checkmark_yellow.png", UriKind.RelativeOrAbsolute);
+                    }
+                    else if (buildJsonLoaded && serviceJsonLoaded)
+                    {
+                        bitmap.UriSource = new Uri("resources/checkmark_green.png", UriKind.RelativeOrAbsolute);
+                    }
+
+                    bitmap.EndInit();
+                    ImageBehavior.SetAnimatedSource(ConnectionIndicator, bitmap);
                 }
                 catch (Exception ex)
                 {
                     output.Text = $"Wystąpił nieoczekiwany błąd: {ex.Message}";
-                    return;
-                }
-
-                BitmapImage bitmap = new BitmapImage();
-                bitmap.BeginInit();
-                if (Shkrape.connected == false)
-                {
                     SetAddressColumnSpan(true);
-                    bitmap.UriSource = new Uri("resources/checkmark_red.png", UriKind.RelativeOrAbsolute);
-                    ImageBehavior.SetAnimatedSource(ConnectionIndicator, bitmap);
-                    
+                    ImageBehavior.SetAnimatedSource(ConnectionIndicator, new BitmapImage(new Uri("resources/checkmark_red.png", UriKind.RelativeOrAbsolute)));
                 }
-                else if (Shkrape.connected == true)
-                {
-                    SetAddressColumnSpan(true);
-                    bitmap.UriSource = new Uri("resources/checkmark_green.png", UriKind.RelativeOrAbsolute);
-                    ImageBehavior.SetAnimatedSource(ConnectionIndicator, bitmap);
-                    
-                }
-                bitmap.EndInit();
             }
             else
             {
                 await Task.Delay(1000);
                 ImageBehavior.SetAnimatedSource(ConnectionIndicator, null);
-                address.Width = address.Width + ConnectionIndicator.Width;
                 SetAddressColumnSpan(false);
-
             }
         }
+        private void ConnectionIndicator_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            // Wywołanie zdarzenia address_TextChanged
+            address_TextChanged(sender, null);
+        }
+
+
 
         private void MinimizeButton_Click(object sender, RoutedEventArgs e)
         {
