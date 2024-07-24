@@ -56,42 +56,41 @@ namespace TESTER.Utils
 
             try
             {
-                // Trim the trailing slash and "index.html" if present
-                string linkWithoutIndex = link.TrimEnd('/');
-                if (linkWithoutIndex.EndsWith("index.html"))
+                // Usunięcie tylko "index.html" jeśli jest obecne, pozostawiając resztę linku nienaruszoną
+                if (link.EndsWith("index.html"))
                 {
-                    linkWithoutIndex = linkWithoutIndex[..^"index.html".Length];
+                    link = link[..^"index.html".Length];
                 }
 
-                if (!Uri.IsWellFormedUriString(linkWithoutIndex, UriKind.Absolute))
+                // Sprawdzenie, czy link jest prawidłowym URI
+                if (!Uri.IsWellFormedUriString(link, UriKind.Absolute))
                 {
                     return (buildJsonLoaded, serviceJsonLoaded);
                 }
 
-                string sourceFilePath = "/mspa/anboot/build.json";
-                string postPath = "/rest/shellService/prepareSystemInfoViewInfo?spinner=disabled";
+                string sourceFilePath = "mspa/anboot/build.json";
+                string postPath = "rest/shellService/prepareSystemInfoViewInfo?spinner=disabled";
 
-                // Construct the full URI for GET request
-                string fullLink = new Uri(new Uri(linkWithoutIndex), sourceFilePath).ToString();
-                string postLink = new Uri(new Uri(linkWithoutIndex), postPath).ToString();
+                // Konstruowanie pełnych ścieżek do plików GET i POST
+                string fullLink = new Uri(new Uri(link), sourceFilePath).ToString();
+                string postLink = new Uri(new Uri(link), postPath).ToString();
 
-                using HttpClient client = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+                using HttpClient client = new HttpClient { Timeout = TimeSpan.FromSeconds(120) };
 
-                // GET request to fetch build.json
+                // Pobieranie build.json
                 string buildJsonString = await client.GetStringAsync(fullLink);
                 buildJson = JObject.Parse(buildJsonString);
                 ProcessBuildJson(buildJson);
                 buildJsonLoaded = true;
 
-                // POST request to fetch serviceJson with a timeout of 3 seconds
+                // Wysyłanie żądania POST do uzyskania serviceJson
                 string postData = "{\"userId\":\"1\"}";
                 StringContent content = new StringContent(postData, System.Text.Encoding.UTF8, "application/json");
 
-                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
-                HttpResponseMessage response = await client.PostAsync(postLink, content, cts.Token);
-                response.EnsureSuccessStatusCode(); // Throw if not a success code.
+                HttpResponseMessage response = await client.PostAsync(postLink, content);
+                response.EnsureSuccessStatusCode();
 
-                string serviceJsonString = await response.Content.ReadAsStringAsync(cts.Token);
+                string serviceJsonString = await response.Content.ReadAsStringAsync();
                 serviceJson = JObject.Parse(serviceJsonString);
                 ProcessServiceJson(serviceJson);
                 serviceJsonLoaded = true;
@@ -99,10 +98,6 @@ namespace TESTER.Utils
             catch (HttpRequestException ex)
             {
                 Console.WriteLine($"HttpRequestException error: {ex.Message}\n");
-            }
-            catch (TaskCanceledException)
-            {
-                Console.WriteLine("Request timed out.\n");
             }
             catch (Exception ex)
             {
