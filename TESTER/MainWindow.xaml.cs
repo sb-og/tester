@@ -43,7 +43,6 @@ namespace TESTER
         {
 
             InitializeComponent();
-            this.ResizeMode = ResizeMode.CanMinimize;
             _scroller = new Scroller(this);
 
 
@@ -58,7 +57,7 @@ namespace TESTER
 
 
 
-            Credits.Text = this.Title.ToString() + " (pre release) " + " By: Szymon Bogus";
+            Credits.Text = this.Title.ToString() + " By: Szymon Bogus";
 
 
             AddMenuItem("Zapisz", MenuSave_Click);
@@ -141,7 +140,7 @@ namespace TESTER
             if (this.WindowState == WindowState.Normal)
             {
                 // Ustaw współczynnik skalowania dla szerokości i wysokości
-                double newWidth = this.ActualWidth + (e.HorizontalChange );
+                double newWidth = this.ActualWidth + (e.HorizontalChange);
                 double newHeight = this.ActualHeight + (e.VerticalChange);
 
                 // Ogranicz nowy rozmiar okna do maksymalnego rozmiaru ekranu
@@ -189,9 +188,9 @@ namespace TESTER
 
         private async void autoUpdateOutput(object sender, RoutedEventArgs e)
         {
-            if (ConfigHelper.ReadSetting("InstaFill")=="True")
+            if (ConfigHelper.ReadSetting("InstaFill") == "True")
             {
-                updateOutput(sender,e);
+                updateOutput(sender, e);
             }
 
         }
@@ -244,32 +243,32 @@ namespace TESTER
 *2. Dane przypadku testowego:*
 |Użytkownik/Hasło|{username}/{password}|";
 
-if (!String.IsNullOrEmpty(idkjos)) output.Text +=
-$@"
+                    if (!String.IsNullOrEmpty(idkjos)) output.Text +=
+                    $@"
 |IDK_JOS:|{idkjos}|";
 
-if (!String.IsNullOrEmpty(nrpesel)) output.Text +=
-$@"
+                    if (!String.IsNullOrEmpty(nrpesel)) output.Text +=
+                    $@"
 |PESEL:|{nrpesel}|";
 
-if (!String.IsNullOrEmpty(IdPacjenta)) output.Text +=
-$@"
+                    if (!String.IsNullOrEmpty(IdPacjenta)) output.Text +=
+                    $@"
 |ID_PAC:|{IdPacjenta}|";
 
-if (!String.IsNullOrEmpty(IdOpieki)) output.Text +=
-$@"
+                    if (!String.IsNullOrEmpty(IdOpieki)) output.Text +=
+                    $@"
 |ID_OPI:|{IdOpieki}|";
 
-if (!String.IsNullOrEmpty(idPob)) output.Text +=
-$@"
+                    if (!String.IsNullOrEmpty(idPob)) output.Text +=
+                    $@"
 |ID_POB:|{idPob}|";
-                    
-if (!String.IsNullOrEmpty(IdZlec)) output.Text +=
-$@"
+
+                    if (!String.IsNullOrEmpty(IdZlec)) output.Text +=
+                    $@"
 |ID_ZLEC:|{IdZlec}|";
 
-output.Text +=
-$@"
+                    output.Text +=
+                    $@"
 
 *3. Kroki postępowania:*
 |Ścieżka:|{sciezka}|
@@ -284,7 +283,7 @@ $@"
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
 
-            if (ConfigHelper.ReadSetting("WarnOnExit") == "True" )
+            if (ConfigHelper.ReadSetting("WarnOnExit") == "True")
             {
                 var result = MessageBox.Show("Zamknięcie okna spowoduje utratę wprowadzonych danych", "Uwaga", MessageBoxButton.OKCancel, MessageBoxImage.None);
 
@@ -332,12 +331,12 @@ $@"
             pesel.Text = string.Empty;
             jos.Text = string.Empty;
 
-            path.Text = string.Empty; 
+            path.Text = string.Empty;
             desc.Text = string.Empty;
 
 
-            DataManager.NrRewizji = string.Empty;   
-            DataManager.AdresBazyDanych = string.Empty; 
+            DataManager.NrRewizji = string.Empty;
+            DataManager.AdresBazyDanych = string.Empty;
             DataManager.NrKompilacji = string.Empty;
             DataManager.DataKompilacji = string.Empty;
             DataManager.AdresBazyDanych = string.Empty;
@@ -388,10 +387,12 @@ $@"
                     else if (buildJsonLoaded && !serviceJsonLoaded)
                     {
                         bitmap.UriSource = new Uri("resources/checkmark_yellow.png", UriKind.RelativeOrAbsolute);
+                        updateOutput(sender, e);
                     }
                     else if (buildJsonLoaded && serviceJsonLoaded)
                     {
                         bitmap.UriSource = new Uri("resources/checkmark_green.png", UriKind.RelativeOrAbsolute);
+                        updateOutput(sender, e);
                     }
 
                     bitmap.EndInit();
@@ -417,11 +418,24 @@ $@"
             address_TextChanged(sender, null);
         }
 
+        private void MaximizeButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (this.WindowState == WindowState.Maximized)
+            {
+                // Przywracanie okna do normalnego rozmiaru
+                this.WindowState = WindowState.Normal;
+            }
+            else
+            {
+                // Maksymalizacja okna
+                this.WindowState = WindowState.Maximized;
+            }
+        }
 
 
         private void MinimizeButton_Click(object sender, RoutedEventArgs e)
         {
-             this.WindowState = WindowState.Minimized;
+            this.WindowState = WindowState.Minimized;
         }
     }
 }
