@@ -55,6 +55,9 @@ namespace TESTER
         private bool isResizing = false;
         private Point lastMousePosition;
         private bool requiresManualDatabaseAddress;
+        private MenuItem? warnOnExitMenuItem;
+        private MenuItem? saveEntireStateMenuItem;
+        private string? restoredDatabaseAddress;
 
 
         public MainWindow()
@@ -62,6 +65,11 @@ namespace TESTER
 
             InitializeComponent();
             SourceInitialized += MainWindow_SourceInitialized;
+            Closing += MainWindow_Closing;
+            MouseEnter += (_, _) => UpdateWindowOpacity();
+            MouseLeave += (_, _) => UpdateWindowOpacity();
+            Activated += (_, _) => UpdateWindowOpacity();
+            Deactivated += (_, _) => UpdateWindowOpacity();
             _scroller = new Scroller(this, RestoreCustomMaximizedWindowForDrag, Window_DragCompleted);
             dbComboBox.AddHandler(System.Windows.Controls.Primitives.TextBoxBase.TextChangedEvent, new TextChangedEventHandler(DatabaseComboBox_TextChanged));
 
@@ -82,6 +90,7 @@ namespace TESTER
             {
                 ApplySavedSplitterLayout();
                 isWindowLayoutReady = true;
+                RestoreSavedApplicationState();
             };
 
 
@@ -91,7 +100,7 @@ namespace TESTER
 
             AddBooleanSettingMenuItem("Zawsze na wierzchu", "Topmost", value => Topmost = value);
             AddBooleanSettingMenuItem("Automatyczne uzupełnianie", "InstaFill");
-            AddBooleanSettingMenuItem("Ostrzegaj przy zamykaniu", "WarnOnExit");
+            warnOnExitMenuItem = AddBooleanSettingMenuItem("Ostrzegaj przy zamykaniu", "WarnOnExit");
             AddBooleanSettingMenuItem("Generuj brakujące puste pola", "GenerateEmptyFields");
             AddBooleanSettingMenuItem("Zachowaj rozmiar okna", "PreserveWindowSize", value =>
             {
@@ -101,6 +110,7 @@ namespace TESTER
                 }
             });
             AddOpacityMenu();
+            AddSaveMenu();
             AddMenuItem("Otwórz config", MenuOpenConfig_Click);
         }
 
@@ -124,7 +134,7 @@ namespace TESTER
             menu.ContextMenu.Items.Add(menuItem); // Dodawanie do menu kontekstowego
         }
 
-        private void AddBooleanSettingMenuItem(string header, string settingKey, Action<bool>? applySetting = null)
+        private MenuItem AddBooleanSettingMenuItem(string header, string settingKey, Action<bool>? applySetting = null)
         {
             bool isChecked = Boolean.TryParse(ConfigHelper.ReadSetting(settingKey), out bool value) && value;
             var menuItem = new MenuItem
@@ -142,6 +152,7 @@ namespace TESTER
             };
 
             menu.ContextMenu.Items.Add(menuItem);
+            return menuItem;
         }
 
         private void AddOpacityMenu()
@@ -152,6 +163,9 @@ namespace TESTER
             AddOpacityMenuItem(opacityMenu, "75%", 0.75);
             AddOpacityMenuItem(opacityMenu, "80%", 0.8);
             AddOpacityMenuItem(opacityMenu, "90%", 0.9);
+            var autoOpacityMenuItem = new MenuItem { Header = "Auto" };
+            autoOpacityMenuItem.Click += (_, _) => ApplyDefaultAutoWindowOpacity();
+            opacityMenu.Items.Add(autoOpacityMenuItem);
             menu.ContextMenu.Items.Add(opacityMenu);
         }
 
@@ -162,18 +176,210 @@ namespace TESTER
             parentMenu.Items.Add(menuItem);
         }
 
-        private void ApplyWindowOpacity(string? opacityValue, bool saveSetting)
+        private void ApplyDefaultAutoWindowOpacity()
         {
-            if (!Double.TryParse(opacityValue, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double opacity))
+            const string defaultAutoOpacity = "0.2;0.75;0.9";
+            ConfigHelper.SaveSetting("WindowOpacity", defaultAutoOpacity);
+            ApplyWindowOpacity(defaultAutoOpacity, saveSetting: false);
+        }
+
+        private void AddSaveMenu()
+        {
+            var saveMenu = new MenuItem { Header = "Zapis" };
+            var saveUserMenuItem = new MenuItem { Header = "Zapisz użytkownika" };
+            saveUserMenuItem.Click += (_, _) => SaveUser();
+            saveMenu.Items.Add(saveUserMenuItem);
+
+            var saveBrowserMenuItem = new MenuItem { Header = "Zapisz przeglądarkę" };
+            saveBrowserMenuItem.Click += (_, _) => SaveBrowser();
+            saveMenu.Items.Add(saveBrowserMenuItem);
+
+            bool autoSaveEnabled = Boolean.TryParse(ConfigHelper.ReadSetting("AutoSave"), out bool value) && value;
+            var autoSaveMenuItem = new MenuItem
             {
-                opacity = 1.0;
+                Header = "Autozapis",
+                IsCheckable = true,
+                IsChecked = autoSaveEnabled
+            };
+            autoSaveMenuItem.Click += (_, _) => ConfigHelper.SaveSetting("AutoSave", autoSaveMenuItem.IsChecked.ToString());
+            saveMenu.Items.Add(autoSaveMenuItem);
+
+            bool saveEntireStateEnabled = autoSaveEnabled && ConfigHelper.ReadSetting("SaveEntireState") == "True";
+            saveEntireStateMenuItem = new MenuItem
+            {
+                Header = "Zapisuj cały stan",
+                IsCheckable = true,
+                IsChecked = saveEntireStateEnabled,
+                IsEnabled = autoSaveEnabled
+            };
+            saveEntireStateMenuItem.Click += (_, _) =>
+            {
+                ConfigHelper.SaveSetting("SaveEntireState", saveEntireStateMenuItem.IsChecked.ToString());
+                UpdateWarnOnExitAvailability(saveEntireStateMenuItem.IsChecked);
+            };
+            saveMenu.Items.Add(saveEntireStateMenuItem);
+
+            autoSaveMenuItem.Click += (_, _) => UpdateSaveEntireStateAvailability(autoSaveMenuItem.IsChecked);
+            UpdateWarnOnExitAvailability(saveEntireStateEnabled);
+
+            menu.ContextMenu.Items.Add(saveMenu);
+        }
+
+        private void UpdateSaveEntireStateAvailability(bool autoSaveEnabled)
+        {
+            if (saveEntireStateMenuItem == null)
+            {
+                return;
             }
 
-            Opacity = Math.Clamp(opacity, 0.0, 1.0);
+            saveEntireStateMenuItem.IsEnabled = autoSaveEnabled;
+            if (!autoSaveEnabled)
+            {
+                saveEntireStateMenuItem.IsChecked = false;
+                ConfigHelper.SaveSetting("SaveEntireState", "False");
+            }
+
+            UpdateWarnOnExitAvailability(saveEntireStateMenuItem.IsChecked);
+        }
+
+        private void UpdateWarnOnExitAvailability(bool saveEntireStateEnabled)
+        {
+            if (warnOnExitMenuItem == null)
+            {
+                return;
+            }
+
+            warnOnExitMenuItem.IsEnabled = !saveEntireStateEnabled;
+            if (saveEntireStateEnabled)
+            {
+                warnOnExitMenuItem.IsChecked = false;
+                ConfigHelper.SaveSetting("WarnOnExit", "False");
+            }
+        }
+
+        private void SaveUser()
+        {
+            ConfigHelper.SaveSetting("User", user.Text);
+        }
+
+        private void SaveBrowser()
+        {
+            ConfigHelper.SaveSetting("Browser", browserComboBox.Text);
+        }
+
+        private void SaveApplicationState()
+        {
+            ConfigHelper.SaveSetting("Password", pwd.Text);
+            ConfigHelper.SaveSetting("SavedAddress", address.Text);
+            ConfigHelper.SaveSetting("SavedDatabaseAddress", dbComboBox.Text);
+            ConfigHelper.SaveSetting("SavedPesel", pesel.Text);
+            ConfigHelper.SaveSetting("SavedJos", jos.Text);
+            ConfigHelper.SaveSetting("SavedPatient", pac.Text);
+            ConfigHelper.SaveSetting("SavedPath", path.Text);
+            ConfigHelper.SaveSetting("SavedDescription", desc.Text);
+            ConfigHelper.SaveSetting("SavedOutput", output.Text);
+        }
+
+        private void RestoreSavedApplicationState()
+        {
+            if (ConfigHelper.ReadSetting("AutoSave") != "True" || ConfigHelper.ReadSetting("SaveEntireState") != "True")
+            {
+                return;
+            }
+
+            pwd.Text = ConfigHelper.ReadSetting("Password");
+            pesel.Text = ConfigHelper.ReadSetting("SavedPesel");
+            jos.Text = ConfigHelper.ReadSetting("SavedJos");
+            pac.Text = ConfigHelper.ReadSetting("SavedPatient");
+            path.Text = ConfigHelper.ReadSetting("SavedPath");
+            desc.Text = ConfigHelper.ReadSetting("SavedDescription");
+            output.Text = ConfigHelper.ReadSetting("SavedOutput");
+            restoredDatabaseAddress = ConfigHelper.ReadSetting("SavedDatabaseAddress");
+            address.Text = ConfigHelper.ReadSetting("SavedAddress");
+        }
+
+        private void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if (ConfigHelper.ReadSetting("AutoSave") != "True")
+            {
+                return;
+            }
+
+            SaveUser();
+            SaveBrowser();
+            if (ConfigHelper.ReadSetting("SaveEntireState") == "True")
+            {
+                SaveApplicationState();
+            }
+        }
+
+        private void ApplyWindowOpacity(string? opacityValue, bool saveSetting)
+        {
+            if (!TryParseOpacityValues(opacityValue, out double[] opacityValues))
+            {
+                opacityValues = new[] { 1.0 };
+            }
+
+            if (opacityValues.Length == 3)
+            {
+                UpdateWindowOpacity(opacityValues);
+            }
+            else
+            {
+                BeginAnimation(OpacityProperty, null);
+                Opacity = opacityValues[0];
+            }
+
             if (saveSetting)
             {
-                ConfigHelper.SaveSetting("WindowOpacity", Opacity.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                ConfigHelper.SaveSetting("WindowOpacity", opacityValues[0].ToString(System.Globalization.CultureInfo.InvariantCulture));
             }
+        }
+
+        private void UpdateWindowOpacity()
+        {
+            if (TryParseOpacityValues(ConfigHelper.ReadSetting("WindowOpacity"), out double[] opacityValues) && opacityValues.Length == 3)
+            {
+                UpdateWindowOpacity(opacityValues);
+            }
+        }
+
+        private void UpdateWindowOpacity(double[] opacityValues)
+        {
+            double targetOpacity = !IsMouseOver
+                ? opacityValues[0]
+                : IsActive ? opacityValues[2] : opacityValues[1];
+
+            BeginAnimation(OpacityProperty, new DoubleAnimation
+            {
+                To = targetOpacity,
+                Duration = TimeSpan.FromMilliseconds(180),
+                EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseInOut }
+            });
+        }
+
+        private static bool TryParseOpacityValues(string? opacityValue, out double[] opacityValues)
+        {
+            string[] values = (opacityValue ?? String.Empty).Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if (values.Length != 1 && values.Length != 3)
+            {
+                opacityValues = Array.Empty<double>();
+                return false;
+            }
+
+            opacityValues = new double[values.Length];
+            for (int index = 0; index < values.Length; index++)
+            {
+                if (!Double.TryParse(values[index], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double opacity))
+                {
+                    opacityValues = Array.Empty<double>();
+                    return false;
+                }
+
+                opacityValues[index] = Math.Clamp(opacity, 0.0, 1.0);
+            }
+
+            return true;
         }
 
         private void ApplySavedWindowSize()
@@ -803,12 +1009,19 @@ namespace TESTER
                     if (requiresManualDatabaseAddress)
                     {
                         dbComboBox.ItemsSource = DatabaseAddressCache.GetDatabaseAddresses();
-                        if (DatabaseAddressCache.TryGet(baseLink, out string cachedDatabaseAddress))
+                        if (!String.IsNullOrWhiteSpace(restoredDatabaseAddress))
+                        {
+                            dbComboBox.Text = restoredDatabaseAddress;
+                            DataManager.AdresBazyDanych = restoredDatabaseAddress;
+                        }
+                        else if (DatabaseAddressCache.TryGet(baseLink, out string cachedDatabaseAddress))
                         {
                             dbComboBox.Text = cachedDatabaseAddress;
                             DataManager.AdresBazyDanych = cachedDatabaseAddress;
                         }
                     }
+
+                    restoredDatabaseAddress = null;
 
                     AnimateDatabaseComboBox(requiresManualDatabaseAddress);
                     await Task.Delay(1000);
