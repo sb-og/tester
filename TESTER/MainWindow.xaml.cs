@@ -34,7 +34,24 @@ namespace TESTER
     /// </summary>
     public partial class MainWindow : Window
     {
+        private const int WmNcHitTest = 0x0084;
+        private const int WmNcLeftButtonDown = 0x00A1;
+        private const int WmExitSizeMove = 0x0232;
+        private const int HtLeft = 10;
+        private const int HtRight = 11;
+        private const int HtTop = 12;
+        private const int HtTopLeft = 13;
+        private const int HtTopRight = 14;
+        private const int HtBottom = 15;
+        private const int HtBottomLeft = 16;
+        private const int HtBottomRight = 17;
+        private const double ResizeBorderThickness = 6;
+
         private readonly Scroller _scroller;
+        private bool isWindowLayoutReady = false;
+        private bool isManualResizeInProgress = false;
+        private bool isCustomMaximized = false;
+        private Rect normalWindowBoundsBeforeMaximize;
         private bool isResizing = false;
         private Point lastMousePosition;
         private bool requiresManualDatabaseAddress;
@@ -44,7 +61,8 @@ namespace TESTER
         {
 
             InitializeComponent();
-            _scroller = new Scroller(this);
+            SourceInitialized += MainWindow_SourceInitialized;
+            _scroller = new Scroller(this, RestoreCustomMaximizedWindowForDrag, Window_DragCompleted);
             dbComboBox.AddHandler(System.Windows.Controls.Primitives.TextBoxBase.TextChangedEvent, new TextChangedEventHandler(DatabaseComboBox_TextChanged));
 
 
@@ -57,6 +75,14 @@ namespace TESTER
             pwd.Text = ConfigHelper.ReadSetting("Password");
             browserComboBox.Text = ConfigHelper.ReadSetting("Browser");
             ApplyWindowOpacity(ConfigHelper.ReadSetting("WindowOpacity"), saveSetting: false);
+            ApplySavedWindowSize();
+            ApplySavedWindowPosition();
+
+            Loaded += (_, _) =>
+            {
+                ApplySavedSplitterLayout();
+                isWindowLayoutReady = true;
+            };
 
 
 
@@ -67,6 +93,13 @@ namespace TESTER
             AddBooleanSettingMenuItem("Automatyczne uzupełnianie", "InstaFill");
             AddBooleanSettingMenuItem("Ostrzegaj przy zamykaniu", "WarnOnExit");
             AddBooleanSettingMenuItem("Generuj brakujące puste pola", "GenerateEmptyFields");
+            AddBooleanSettingMenuItem("Zachowaj rozmiar okna", "PreserveWindowSize", value =>
+            {
+                if (value)
+                {
+                    SaveWindowLayout(saveWindowSize: true, saveSplitterLayout: true);
+                }
+            });
             AddOpacityMenu();
             AddMenuItem("Otwórz config", MenuOpenConfig_Click);
         }
@@ -143,6 +176,198 @@ namespace TESTER
             }
         }
 
+        private void ApplySavedWindowSize()
+        {
+            if (ConfigHelper.ReadSetting("PreserveWindowSize") != "True")
+            {
+                return;
+            }
+
+            if (TryReadDoubleSetting("WindowWidth", out double savedWidth) && savedWidth >= MinWidth)
+            {
+                Width = savedWidth;
+            }
+
+            if (TryReadDoubleSetting("WindowHeight", out double savedHeight) && savedHeight >= MinHeight)
+            {
+                Height = savedHeight;
+            }
+        }
+
+        private void ApplySavedWindowPosition()
+        {
+            if (ConfigHelper.ReadSetting("PreserveWindowSize") != "True")
+            {
+                return;
+            }
+
+            if (!TryReadDoubleSetting("WindowLeft", out double savedLeft) || !TryReadDoubleSetting("WindowTop", out double savedTop))
+            {
+                return;
+            }
+
+            double windowWidth = Width >= MinWidth ? Width : MinWidth;
+            double windowHeight = Height >= MinHeight ? Height : MinHeight;
+            bool isInsideVirtualScreen =
+                savedLeft >= SystemParameters.VirtualScreenLeft &&
+                savedTop >= SystemParameters.VirtualScreenTop &&
+                savedLeft + windowWidth <= SystemParameters.VirtualScreenLeft + SystemParameters.VirtualScreenWidth &&
+                savedTop + windowHeight <= SystemParameters.VirtualScreenTop + SystemParameters.VirtualScreenHeight;
+
+            if (!isInsideVirtualScreen)
+            {
+                return;
+            }
+
+            Left = savedLeft;
+            Top = savedTop;
+        }
+
+        private void ApplySavedSplitterLayout()
+        {
+            if (ConfigHelper.ReadSetting("PreserveWindowSize") != "True")
+            {
+                return;
+            }
+
+            if (!TryReadDoubleSetting("LeftColumnWidth", out double leftWidth) || !TryReadDoubleSetting("RightColumnWidth", out double rightWidth))
+            {
+                return;
+            }
+
+            if (leftWidth < leftContentColumn.MinWidth || rightWidth < rightContentColumn.MinWidth)
+            {
+                return;
+            }
+
+            leftContentColumn.Width = new GridLength(leftWidth, GridUnitType.Star);
+            rightContentColumn.Width = new GridLength(rightWidth, GridUnitType.Star);
+        }
+
+        private void SaveWindowLayout(bool saveWindowSize, bool saveSplitterLayout)
+        {
+            if (!isWindowLayoutReady || ConfigHelper.ReadSetting("PreserveWindowSize") != "True")
+            {
+                return;
+            }
+
+            bool canSaveWindowBounds = WindowState == WindowState.Normal && !isCustomMaximized && !IsWindowSnappedToWorkArea();
+            if (canSaveWindowBounds)
+            {
+                ConfigHelper.SaveSetting("WindowLeft", Left.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                ConfigHelper.SaveSetting("WindowTop", Top.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            }
+
+            if (saveWindowSize && canSaveWindowBounds)
+            {
+                ConfigHelper.SaveSetting("WindowWidth", ActualWidth.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                ConfigHelper.SaveSetting("WindowHeight", ActualHeight.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            }
+
+            if (saveSplitterLayout)
+            {
+                ConfigHelper.SaveSetting("LeftColumnWidth", leftContentColumn.ActualWidth.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                ConfigHelper.SaveSetting("RightColumnWidth", rightContentColumn.ActualWidth.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            }
+        }
+
+        private static bool TryReadDoubleSetting(string key, out double value)
+        {
+            return Double.TryParse(ConfigHelper.ReadSetting(key), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out value);
+        }
+
+        private static bool AreClose(double first, double second)
+        {
+            return Math.Abs(first - second) <= 2;
+        }
+
+        private bool IsWindowSnappedToWorkArea()
+        {
+            Rect workArea = SystemParameters.WorkArea;
+            bool isFullWorkArea =
+                AreClose(Left, workArea.Left) &&
+                AreClose(Top, workArea.Top) &&
+                AreClose(ActualWidth, workArea.Width) &&
+                AreClose(ActualHeight, workArea.Height);
+            bool touchesLeftOrRight = AreClose(Left, workArea.Left) || AreClose(Left + ActualWidth, workArea.Right);
+            bool touchesTopOrBottom = AreClose(Top, workArea.Top) || AreClose(Top + ActualHeight, workArea.Bottom);
+            bool isHalfWidth = AreClose(ActualWidth, workArea.Width / 2);
+            bool isHalfHeight = AreClose(ActualHeight, workArea.Height / 2);
+            bool isFullHeight = AreClose(ActualHeight, workArea.Height);
+
+            return isFullWorkArea ||
+                (touchesLeftOrRight && isHalfWidth && isFullHeight) ||
+                (touchesLeftOrRight && touchesTopOrBottom && isHalfWidth && isHalfHeight);
+        }
+
+        private void Window_DragCompleted()
+        {
+            SaveWindowLayout(saveWindowSize: false, saveSplitterLayout: false);
+        }
+
+        private void GridSplitter_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
+        {
+            SaveWindowLayout(saveWindowSize: false, saveSplitterLayout: true);
+        }
+
+        private void MainWindow_SourceInitialized(object? sender, EventArgs e)
+        {
+            HwndSource? source = HwndSource.FromHwnd(new WindowInteropHelper(this).Handle);
+            source?.AddHook(WindowProc);
+        }
+
+        private IntPtr WindowProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        {
+            if (msg == WmNcHitTest && WindowState == WindowState.Normal && !isCustomMaximized)
+            {
+                int hitTest = GetResizeHitTest(lParam);
+                if (hitTest != 0)
+                {
+                    handled = true;
+                    return new IntPtr(hitTest);
+                }
+            }
+            else if (msg == WmNcLeftButtonDown && IsResizeHitTest(wParam.ToInt32()))
+            {
+                isManualResizeInProgress = true;
+            }
+            else if (msg == WmExitSizeMove && isManualResizeInProgress)
+            {
+                isManualResizeInProgress = false;
+                SaveWindowLayout(saveWindowSize: true, saveSplitterLayout: true);
+            }
+
+            return IntPtr.Zero;
+        }
+
+        private int GetResizeHitTest(IntPtr lParam)
+        {
+            int x = unchecked((short)(lParam.ToInt64() & 0xFFFF));
+            int y = unchecked((short)((lParam.ToInt64() >> 16) & 0xFFFF));
+            Point cursorPosition = PointFromScreen(new Point(x, y));
+
+            bool isLeft = cursorPosition.X <= ResizeBorderThickness;
+            bool isRight = cursorPosition.X >= ActualWidth - ResizeBorderThickness;
+            bool isTop = cursorPosition.Y <= ResizeBorderThickness;
+            bool isBottom = cursorPosition.Y >= ActualHeight - ResizeBorderThickness;
+
+            if (isTop && isLeft) return HtTopLeft;
+            if (isTop && isRight) return HtTopRight;
+            if (isBottom && isLeft) return HtBottomLeft;
+            if (isBottom && isRight) return HtBottomRight;
+            if (isLeft) return HtLeft;
+            if (isRight) return HtRight;
+            if (isTop) return HtTop;
+            if (isBottom) return HtBottom;
+
+            return 0;
+        }
+
+        private static bool IsResizeHitTest(int hitTest)
+        {
+            return hitTest >= HtLeft && hitTest <= HtBottomRight;
+        }
+
         private void MenuOpenConfig_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -168,24 +393,6 @@ namespace TESTER
                 MessageBox.Show($"Wystąpił problem podczas otwierania pliku: {ex.Message}", "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void customResizeGrip_DragDelta(object sender, System.Windows.Controls.Primitives.DragDeltaEventArgs e)
-        {
-            if (this.WindowState == WindowState.Normal)
-            {
-                // Ustaw współczynnik skalowania dla szerokości i wysokości
-                double newWidth = this.ActualWidth + (e.HorizontalChange);
-                double newHeight = this.ActualHeight + (e.VerticalChange);
-
-                // Ogranicz nowy rozmiar okna do maksymalnego rozmiaru ekranu
-                double maxWidth = SystemParameters.WorkArea.Width;
-                double maxHeight = SystemParameters.WorkArea.Height;
-
-                // Sprawdź minimalne i maksymalne wymiary okna przed skalowaniem
-                this.Width = Math.Max(this.MinWidth, Math.Min(newWidth, maxWidth));
-                this.Height = Math.Max(this.MinHeight, Math.Min(newHeight, maxHeight));
-            }
-        }
-
 
         static string ExtractCaseData(string data, int index)
         {
@@ -650,16 +857,61 @@ namespace TESTER
 
         private void MaximizeButton_Click(object sender, RoutedEventArgs e)
         {
-            if (this.WindowState == WindowState.Maximized)
+            if (isCustomMaximized)
             {
-                // Przywracanie okna do normalnego rozmiaru
-                this.WindowState = WindowState.Normal;
+                RestoreCustomMaximizedWindow();
             }
             else
             {
-                // Maksymalizacja okna
-                this.WindowState = WindowState.Maximized;
+                MaximizeWindowToWorkArea();
             }
+        }
+
+        private void MaximizeWindowToWorkArea()
+        {
+            normalWindowBoundsBeforeMaximize = new Rect(Left, Top, ActualWidth, ActualHeight);
+            Rect workArea = SystemParameters.WorkArea;
+
+            isCustomMaximized = true;
+            WindowState = WindowState.Normal;
+            Left = workArea.Left;
+            Top = workArea.Top;
+            Width = workArea.Width;
+            Height = workArea.Height;
+            MaximizeIcon.Text = "🗗";
+        }
+
+        private void RestoreCustomMaximizedWindow()
+        {
+            isCustomMaximized = false;
+
+            Width = Math.Max(MinWidth, normalWindowBoundsBeforeMaximize.Width);
+            Height = Math.Max(MinHeight, normalWindowBoundsBeforeMaximize.Height);
+            Left = normalWindowBoundsBeforeMaximize.Left;
+            Top = normalWindowBoundsBeforeMaximize.Top;
+            MaximizeIcon.Text = "🗖";
+        }
+
+        private bool RestoreCustomMaximizedWindowForDrag(Point mousePosition)
+        {
+            if (!isCustomMaximized)
+            {
+                return false;
+            }
+
+            double horizontalRatio = ActualWidth > 0 ? mousePosition.X / ActualWidth : 0.5;
+            Point screenPosition = PointToScreen(mousePosition);
+            double restoredWidth = Math.Max(MinWidth, normalWindowBoundsBeforeMaximize.Width);
+            double restoredHeight = Math.Max(MinHeight, normalWindowBoundsBeforeMaximize.Height);
+
+            isCustomMaximized = false;
+            Width = restoredWidth;
+            Height = restoredHeight;
+            Left = screenPosition.X - restoredWidth * horizontalRatio;
+            Top = SystemParameters.WorkArea.Top;
+            MaximizeIcon.Text = "🗖";
+
+            return true;
         }
 
 

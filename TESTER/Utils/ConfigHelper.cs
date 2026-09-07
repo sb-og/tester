@@ -16,7 +16,14 @@ public static class ConfigHelper
         { "WindowOpacity", "1.0" },
         { "InstaFill", "False" },
         { "WarnOnExit", "False" },
-        { "GenerateEmptyFields", "True" }
+        { "GenerateEmptyFields", "True" },
+        { "PreserveWindowSize", "True" },
+        { "WindowWidth", "" },
+        { "WindowHeight", "" },
+        { "WindowLeft", "" },
+        { "WindowTop", "" },
+        { "LeftColumnWidth", "" },
+        { "RightColumnWidth", "" }
         // Dodaj kolejne domyślne ustawienia w formie par klucz-wartość
     };
 
