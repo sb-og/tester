@@ -7,7 +7,7 @@ public static class ConfigHelper
 {
     public const string ConfigFilePath = "config.json";
 
-    private static readonly Dictionary<string, string> DefaultSettings = new Dictionary<string, string>
+    private static readonly Dictionary<string, string?> DefaultSettings = new Dictionary<string, string?>
     {
         { "User", "ADMIN" },
         { "Password", "ADMIN" },
@@ -15,7 +15,9 @@ public static class ConfigHelper
         { "Browser", "Edge" },
         { "AutoSave", "True" },
         { "SaveEntireState", "True" },
-        { "WindowOpacity", "0.2;0.75;0.9" },
+        { "OpacityBase", "0.2" },
+        { "OpacityFocus", "0.5" },
+        { "OpacityHover", "0.3" },
         { "InstaFill", "True" },
         { "WarnOnExit", "False" },
         { "GenerateEmptyFields", "False" },
@@ -29,7 +31,7 @@ public static class ConfigHelper
         // Dodaj kolejne domyślne ustawienia w formie par klucz-wartość
     };
 
-    private static Dictionary<string, string>? CurrentSettings;
+    private static Dictionary<string, string?>? CurrentSettings;
 
     public static void CreateConfigFile()
     {
@@ -48,7 +50,7 @@ public static class ConfigHelper
         }
     }
 
-    private static Dictionary<string, string> ReadSettings()
+    private static Dictionary<string, string?> ReadSettings()
     {
         try
         {
@@ -57,7 +59,7 @@ public static class ConfigHelper
 
             if (!string.IsNullOrEmpty(json))
             {
-                return JsonConvert.DeserializeObject<Dictionary<string, string>>(json) ?? new Dictionary<string, string>();
+                return JsonConvert.DeserializeObject<Dictionary<string, string?>>(json) ?? new Dictionary<string, string?>();
             }
         }
         catch (Exception ex)
@@ -65,14 +67,15 @@ public static class ConfigHelper
             Console.WriteLine($"Wystąpił błąd podczas odczytywania ustawień: {ex.Message}");
         }
 
-        return new Dictionary<string, string>();
+        return new Dictionary<string, string?>();
     }
 
-    private static Dictionary<string, string> GetSettings()
+    private static Dictionary<string, string?> GetSettings()
     {
         if (CurrentSettings == null)
         {
             CurrentSettings = ReadSettings();
+            MigrateWindowOpacitySetting(CurrentSettings);
         }
 
         foreach (var defaultSetting in DefaultSettings)
@@ -86,7 +89,33 @@ public static class ConfigHelper
         return CurrentSettings;
     }
 
-    private static void SaveSettings(Dictionary<string, string> settings)
+    private static void MigrateWindowOpacitySetting(Dictionary<string, string?> settings)
+    {
+        if (!settings.TryGetValue("WindowOpacity", out string? legacyOpacity) || String.IsNullOrWhiteSpace(legacyOpacity))
+        {
+            return;
+        }
+
+        string[] opacityValues = legacyOpacity.Split(';', StringSplitOptions.TrimEntries);
+        if (!settings.ContainsKey("OpacityBase") && opacityValues.Length > 0)
+        {
+            settings["OpacityBase"] = opacityValues[0];
+        }
+
+        if (!settings.ContainsKey("OpacityFocus"))
+        {
+            settings["OpacityFocus"] = opacityValues.Length == 3 ? opacityValues[1] : null;
+        }
+
+        if (!settings.ContainsKey("OpacityHover"))
+        {
+            settings["OpacityHover"] = opacityValues.Length == 3 ? opacityValues[2] : null;
+        }
+
+        settings.Remove("WindowOpacity");
+    }
+
+    private static void SaveSettings(Dictionary<string, string?> settings)
     {
         try
         {
@@ -102,7 +131,7 @@ public static class ConfigHelper
         }
     }
 
-    public static void SaveSetting(string key, string value)
+    public static void SaveSetting(string key, string? value)
     {
         try
         {
@@ -131,12 +160,12 @@ public static class ConfigHelper
             // Odczytaj wartość dla podanego klucza
             if (settings.ContainsKey(key))
             {
-                return settings[key];
+                return settings[key] ?? String.Empty;
             }
 
             if (DefaultSettings.ContainsKey(key))
             {
-                return DefaultSettings[key];
+                return DefaultSettings[key] ?? String.Empty;
             }
         }
         catch (Exception ex)

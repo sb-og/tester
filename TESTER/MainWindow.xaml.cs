@@ -82,7 +82,7 @@ namespace TESTER
             user.Text = ConfigHelper.ReadSetting("User");
             pwd.Text = ConfigHelper.ReadSetting("Password");
             browserComboBox.Text = ConfigHelper.ReadSetting("Browser");
-            ApplyWindowOpacity(ConfigHelper.ReadSetting("WindowOpacity"), saveSetting: false);
+            ApplyConfiguredWindowOpacity();
             ApplySavedWindowSize();
             ApplySavedWindowPosition();
 
@@ -173,15 +173,16 @@ namespace TESTER
         private void AddOpacityMenuItem(MenuItem parentMenu, string header, double opacity)
         {
             var menuItem = new MenuItem { Header = header, StaysOpenOnClick = true };
-            menuItem.Click += (_, _) => ApplyWindowOpacity(opacity.ToString(System.Globalization.CultureInfo.InvariantCulture), saveSetting: true);
+            menuItem.Click += (_, _) => ApplyManualWindowOpacity(opacity);
             parentMenu.Items.Add(menuItem);
         }
 
         private void ApplyDefaultAutoWindowOpacity()
         {
-            const string defaultAutoOpacity = "0.2;0.75;0.9";
-            ConfigHelper.SaveSetting("WindowOpacity", defaultAutoOpacity);
-            ApplyWindowOpacity(defaultAutoOpacity, saveSetting: false);
+            ConfigHelper.SaveSetting("OpacityBase", "0.2");
+            ConfigHelper.SaveSetting("OpacityFocus", "0.5");
+            ConfigHelper.SaveSetting("OpacityHover", "0.3");
+            ApplyConfiguredWindowOpacity();
         }
 
         private void AddSaveMenu()
@@ -321,32 +322,29 @@ namespace TESTER
             }
         }
 
-        private void ApplyWindowOpacity(string? opacityValue, bool saveSetting)
+        private void ApplyManualWindowOpacity(double opacity)
         {
-            if (!TryParseOpacityValues(opacityValue, out double[] opacityValues))
-            {
-                opacityValues = new[] { 1.0 };
-            }
+            ConfigHelper.SaveSetting("OpacityBase", opacity.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            ConfigHelper.SaveSetting("OpacityFocus", null);
+            ConfigHelper.SaveSetting("OpacityHover", null);
+            ApplyConfiguredWindowOpacity();
+        }
 
-            if (opacityValues.Length == 3)
+        private void ApplyConfiguredWindowOpacity()
+        {
+            if (TryGetAutoOpacityValues(out double[] opacityValues))
             {
                 UpdateWindowOpacity(opacityValues);
-            }
-            else
-            {
-                BeginAnimation(OpacityProperty, null);
-                Opacity = opacityValues[0];
+                return;
             }
 
-            if (saveSetting)
-            {
-                ConfigHelper.SaveSetting("WindowOpacity", opacityValues[0].ToString(System.Globalization.CultureInfo.InvariantCulture));
-            }
+            BeginAnimation(OpacityProperty, null);
+            Opacity = TryParseOpacityValue(ConfigHelper.ReadSetting("OpacityBase"), out double opacity) ? opacity : 1.0;
         }
 
         private void UpdateWindowOpacity()
         {
-            if (TryParseOpacityValues(ConfigHelper.ReadSetting("WindowOpacity"), out double[] opacityValues) && opacityValues.Length == 3)
+            if (TryGetAutoOpacityValues(out double[] opacityValues))
             {
                 UpdateWindowOpacity(opacityValues);
             }
@@ -354,9 +352,18 @@ namespace TESTER
 
         private void UpdateWindowOpacity(double[] opacityValues)
         {
-            double targetOpacity = !IsMouseOver
-                ? opacityValues[0]
-                : IsActive ? opacityValues[2] : opacityValues[1];
+            double targetOpacity = opacityValues[0];
+            if (IsActive)
+            {
+                targetOpacity += opacityValues[1];
+            }
+
+            if (IsMouseOver)
+            {
+                targetOpacity += opacityValues[2];
+            }
+
+            targetOpacity = Math.Clamp(targetOpacity, 0.0, 1.0);
 
             BeginAnimation(OpacityProperty, new DoubleAnimation
             {
@@ -366,27 +373,28 @@ namespace TESTER
             });
         }
 
-        private static bool TryParseOpacityValues(string? opacityValue, out double[] opacityValues)
+        private static bool TryGetAutoOpacityValues(out double[] opacityValues)
         {
-            string[] values = (opacityValue ?? String.Empty).Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-            if (values.Length != 1 && values.Length != 3)
+            if (!TryParseOpacityValue(ConfigHelper.ReadSetting("OpacityBase"), out double baseOpacity)
+                || !TryParseOpacityValue(ConfigHelper.ReadSetting("OpacityFocus"), out double focusOpacity)
+                || !TryParseOpacityValue(ConfigHelper.ReadSetting("OpacityHover"), out double hoverOpacity))
             {
                 opacityValues = Array.Empty<double>();
                 return false;
             }
 
-            opacityValues = new double[values.Length];
-            for (int index = 0; index < values.Length; index++)
-            {
-                if (!Double.TryParse(values[index], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double opacity))
-                {
-                    opacityValues = Array.Empty<double>();
-                    return false;
-                }
+            opacityValues = new[] { baseOpacity, focusOpacity, hoverOpacity };
+            return true;
+        }
 
-                opacityValues[index] = Math.Clamp(opacity, 0.0, 1.0);
+        private static bool TryParseOpacityValue(string? opacityValue, out double opacity)
+        {
+            if (!Double.TryParse(opacityValue, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out opacity))
+            {
+                return false;
             }
 
+            opacity = Math.Clamp(opacity, 0.0, 1.0);
             return true;
         }
 
