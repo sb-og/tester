@@ -37,6 +37,7 @@ namespace TESTER
         private readonly Scroller _scroller;
         private bool isResizing = false;
         private Point lastMousePosition;
+        private bool requiresManualDatabaseAddress;
 
 
         public MainWindow()
@@ -44,6 +45,7 @@ namespace TESTER
 
             InitializeComponent();
             _scroller = new Scroller(this);
+            dbComboBox.AddHandler(System.Windows.Controls.Primitives.TextBoxBase.TextChangedEvent, new TextChangedEventHandler(DatabaseComboBox_TextChanged));
 
 
             //update or create config
@@ -54,15 +56,18 @@ namespace TESTER
             user.Text = ConfigHelper.ReadSetting("User");
             pwd.Text = ConfigHelper.ReadSetting("Password");
             browserComboBox.Text = ConfigHelper.ReadSetting("Browser");
+            ApplyWindowOpacity(ConfigHelper.ReadSetting("WindowOpacity"), saveSetting: false);
 
 
 
             Credits.Text = this.Title.ToString() + " By: Szymon Bogus";
 
 
-            AddMenuItem("Zapisz", MenuSave_Click);
-            AddMenuItem("Zawsze na wierzchu", MenuAlwaysOnTop_Click);
-            AddMenuItem("Sprawdź aktualizacje", MenuCheckUpdates_Click);
+            AddBooleanSettingMenuItem("Zawsze na wierzchu", "Topmost", value => Topmost = value);
+            AddBooleanSettingMenuItem("Automatyczne uzupełnianie", "InstaFill");
+            AddBooleanSettingMenuItem("Ostrzegaj przy zamykaniu", "WarnOnExit");
+            AddBooleanSettingMenuItem("Generuj brakujące puste pola", "GenerateEmptyFields");
+            AddOpacityMenu();
             AddMenuItem("Otwórz config", MenuOpenConfig_Click);
         }
 
@@ -85,29 +90,57 @@ namespace TESTER
             menuItem.Click += handler; // Przypisanie obsługi zdarzeń
             menu.ContextMenu.Items.Add(menuItem); // Dodawanie do menu kontekstowego
         }
-        private void MenuSave_Click(object sender, RoutedEventArgs e)
+
+        private void AddBooleanSettingMenuItem(string header, string settingKey, Action<bool>? applySetting = null)
         {
-            ConfigHelper.SaveSetting("Browser", browserComboBox.Text);
+            bool isChecked = Boolean.TryParse(ConfigHelper.ReadSetting(settingKey), out bool value) && value;
+            var menuItem = new MenuItem
+            {
+                Header = header,
+                IsCheckable = true,
+                IsChecked = isChecked
+            };
 
-            string key1 = "User";
-            string value1 = user.Text;
-            ConfigHelper.SaveSetting(key1, value1);
+            menuItem.Click += (_, _) =>
+            {
+                bool newValue = menuItem.IsChecked;
+                ConfigHelper.SaveSetting(settingKey, newValue.ToString());
+                applySetting?.Invoke(newValue);
+            };
 
-            string key2 = "Password";
-            string value2 = pwd.Text;
-            ConfigHelper.SaveSetting(key2, value2);
+            menu.ContextMenu.Items.Add(menuItem);
         }
 
-        private void MenuAlwaysOnTop_Click(object sender, RoutedEventArgs e)
+        private void AddOpacityMenu()
         {
-            // Logika dla "Zawsze na wierzchu" - przełączanie trybu zawsze na wierzchu
-            var window = Application.Current.MainWindow;
-            window.Topmost = !window.Topmost; // Przełączanie wartości
+            var opacityMenu = new MenuItem { Header = "Ustaw przezroczystość" };
+            AddOpacityMenuItem(opacityMenu, "Wyłącz przezroczystość", 1.0);
+            AddOpacityMenuItem(opacityMenu, "50%", 0.5);
+            AddOpacityMenuItem(opacityMenu, "75%", 0.75);
+            AddOpacityMenuItem(opacityMenu, "80%", 0.8);
+            AddOpacityMenuItem(opacityMenu, "90%", 0.9);
+            menu.ContextMenu.Items.Add(opacityMenu);
         }
 
-        private void MenuCheckUpdates_Click(object sender, RoutedEventArgs e)
+        private void AddOpacityMenuItem(MenuItem parentMenu, string header, double opacity)
         {
-            // Logika dla "Sprawdź aktualizacje"
+            var menuItem = new MenuItem { Header = header };
+            menuItem.Click += (_, _) => ApplyWindowOpacity(opacity.ToString(System.Globalization.CultureInfo.InvariantCulture), saveSetting: true);
+            parentMenu.Items.Add(menuItem);
+        }
+
+        private void ApplyWindowOpacity(string? opacityValue, bool saveSetting)
+        {
+            if (!Double.TryParse(opacityValue, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double opacity))
+            {
+                opacity = 1.0;
+            }
+
+            Opacity = Math.Clamp(opacity, 0.0, 1.0);
+            if (saveSetting)
+            {
+                ConfigHelper.SaveSetting("WindowOpacity", Opacity.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            }
         }
 
         private void MenuOpenConfig_Click(object sender, RoutedEventArgs e)
@@ -209,6 +242,7 @@ namespace TESTER
             //stare uzupełnianie przeglądarki    string webengine = browser.Text.Replace(Environment.NewLine, " '
             string username = user.Text;
             string password = pwd.Text;
+            bool generateEmptyFields = ConfigHelper.ReadSetting("GenerateEmptyFields") == "True";
 
             //Dane przypadku testowego
             string IdPacjenta = ExtractCaseData(pacjent, 0); // Identyfikator pacjenta
@@ -230,54 +264,104 @@ namespace TESTER
                     // Teraz możesz przekazać browserType do funkcji GetBrowserVersion
                     webengine = BrowserHelper.GetBrowserVersion(browserType);
 
+                    var outputBuilder = new StringBuilder();
+                    outputBuilder.AppendLine("*1. Dane środowiska testowego:*");
+                    AppendOutputRow(outputBuilder, "Przeglądarka:", $"{browserType} wersja: {webengine}", generateEmptyFields);
+                    AppendOutputRow(outputBuilder, "Adres środowiska:", ip, generateEmptyFields, value => $"[{value}]");
+                    AppendOutputRow(outputBuilder, "Adres Bazy danych:", DataManager.AdresBazyDanych, generateEmptyFields);
+                    AppendOutputRow(outputBuilder, "NR Kompilacji AMMS:", DataManager.NrKompilacji, generateEmptyFields);
+                    AppendOutputRow(outputBuilder, "Data kompilacji AMMS:", DataManager.DataKompilacji, generateEmptyFields);
+                    AppendOutputRow(outputBuilder, "Numer rewizji AMMS:", DataManager.NrRewizji, generateEmptyFields);
 
-                    output.Text =
-                    $@"*1. Dane środowiska testowego:*
-|Przeglądarka:|{browserType} wersja: {webengine}|
-|Adres środowiska:|[{ip}]|
-|Adres Bazy danych:|{DataManager.AdresBazyDanych}|
-|NR Kompilacji AMMS:|{DataManager.NrKompilacji}|
-|Data kompilacji AMMS:|{DataManager.DataKompilacji}|
-|Numer rewizji AMMS:|{DataManager.NrRewizji}|
+                    outputBuilder.AppendLine();
+                    outputBuilder.AppendLine("*2. Dane przypadku testowego:*");
+                    AppendOutputRow(outputBuilder, "Użytkownik/Hasło", $"{username}/{password}", generateEmptyFields, _ => $"{username}/{password}", username, password);
+                    AppendOutputRow(outputBuilder, "IDK_JOS:", idkjos, generateEmptyFields);
+                    AppendOutputRow(outputBuilder, "PESEL:", nrpesel, generateEmptyFields);
+                    AppendOutputRow(outputBuilder, "ID_PAC:", IdPacjenta, generateEmptyFields);
+                    AppendOutputRow(outputBuilder, "ID_OPI:", IdOpieki, generateEmptyFields);
+                    AppendOutputRow(outputBuilder, "ID_POB:", idPob, generateEmptyFields);
+                    AppendOutputRow(outputBuilder, "ID_ZLEC:", IdZlec, generateEmptyFields);
 
-*2. Dane przypadku testowego:*
-|Użytkownik/Hasło|{username}/{password}|";
+                    outputBuilder.AppendLine();
+                    outputBuilder.AppendLine("*3. Kroki postępowania:*");
+                    AppendOutputRow(outputBuilder, "Ścieżka:", sciezka, generateEmptyFields);
 
-                    if (!String.IsNullOrEmpty(idkjos)) output.Text +=
-                    $@"
-|IDK_JOS:|{idkjos}|";
+                    outputBuilder.AppendLine();
+                    outputBuilder.AppendLine("*4. Uzyskany rezultat*");
+                    if (generateEmptyFields || !String.IsNullOrWhiteSpace(podsumowanie))
+                    {
+                        outputBuilder.AppendLine(podsumowanie);
+                    }
 
-                    if (!String.IsNullOrEmpty(nrpesel)) output.Text +=
-                    $@"
-|PESEL:|{nrpesel}|";
-
-                    if (!String.IsNullOrEmpty(IdPacjenta)) output.Text +=
-                    $@"
-|ID_PAC:|{IdPacjenta}|";
-
-                    if (!String.IsNullOrEmpty(IdOpieki)) output.Text +=
-                    $@"
-|ID_OPI:|{IdOpieki}|";
-
-                    if (!String.IsNullOrEmpty(idPob)) output.Text +=
-                    $@"
-|ID_POB:|{idPob}|";
-
-                    if (!String.IsNullOrEmpty(IdZlec)) output.Text +=
-                    $@"
-|ID_ZLEC:|{IdZlec}|";
-
-                    output.Text +=
-                    $@"
-
-*3. Kroki postępowania:*
-|Ścieżka:|{sciezka}|
-
-*4. Uzyskany rezultat*
-{podsumowanie}
-";
+                    output.Text = outputBuilder.ToString();
                 }
             }
+        }
+
+        private static void AppendOutputRow(StringBuilder outputBuilder, string label, string? value, bool generateEmptyFields, Func<string, string>? formatValue = null, params string?[] valuesToCheck)
+        {
+            bool hasValue = valuesToCheck.Length > 0
+                ? valuesToCheck.Any(fieldValue => !String.IsNullOrWhiteSpace(fieldValue))
+                : !String.IsNullOrWhiteSpace(value);
+
+            if (!generateEmptyFields && !hasValue)
+            {
+                return;
+            }
+
+            string safeValue = value ?? String.Empty;
+            string displayValue = formatValue?.Invoke(safeValue) ?? safeValue;
+            outputBuilder.AppendLine($"|{label}|{displayValue}|");
+        }
+
+        private void GenerateButton_Click(object sender, RoutedEventArgs e)
+        {
+            SaveManualDatabaseAddress();
+            updateOutput(sender, e);
+        }
+
+        private void DatabaseComboBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (!requiresManualDatabaseAddress)
+            {
+                return;
+            }
+
+            DataManager.AdresBazyDanych = dbComboBox.Text.Trim();
+            if (ConfigHelper.ReadSetting("InstaFill") == "True")
+            {
+                SaveManualDatabaseAddress();
+                updateOutput(sender, e);
+            }
+        }
+
+        private void SaveManualDatabaseAddress()
+        {
+            if (!requiresManualDatabaseAddress || String.IsNullOrWhiteSpace(dbComboBox.Text))
+            {
+                return;
+            }
+
+            DataManager.AdresBazyDanych = dbComboBox.Text.Trim();
+            DatabaseAddressCache.Save(address.Text, DataManager.AdresBazyDanych);
+        }
+
+        private void DatabaseComboBox_Pasting(object sender, DataObjectPastingEventArgs e)
+        {
+            if (!e.DataObject.GetDataPresent(DataFormats.UnicodeText, true))
+            {
+                return;
+            }
+
+            string? pastedText = e.DataObject.GetData(DataFormats.UnicodeText) as string;
+            if (pastedText == null)
+            {
+                return;
+            }
+
+            dbComboBox.Text = String.Concat(pastedText.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)).Trim();
+            e.CancelCommand();
         }
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)
@@ -285,21 +369,132 @@ namespace TESTER
 
             if (ConfigHelper.ReadSetting("WarnOnExit") == "True")
             {
-                var result = MessageBox.Show("Zamknięcie okna spowoduje utratę wprowadzonych danych", "Uwaga", MessageBoxButton.OKCancel, MessageBoxImage.None);
-
-                if (result == MessageBoxResult.OK)
-                {
-                    // Logika zapisywania zmian
-                    this.Close(); // Zamknij okno tylko jeśli użytkownik zdecydował się zapisać zmiany
-                }
-                else if (result == MessageBoxResult.Cancel)
+                if (!ShowCloseConfirmationDialog())
                 {
                     return;
                 }
-                this.Close();
             }
+
             this.Close();
 
+        }
+
+        private bool ShowCloseConfirmationDialog()
+        {
+            var dialog = new Window
+            {
+                Owner = this,
+                Title = "Uwaga",
+                Width = 390,
+                Height = 160,
+                MinWidth = 390,
+                MinHeight = 160,
+                ResizeMode = ResizeMode.NoResize,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                WindowStyle = WindowStyle.None,
+                AllowsTransparency = true,
+                Background = Brushes.Transparent,
+                Foreground = Brushes.White,
+                ShowInTaskbar = false,
+                Topmost = Topmost
+            };
+
+            var border = new Border
+            {
+                BorderBrush = new SolidColorBrush(Color.FromRgb(10, 18, 31)),
+                BorderThickness = new Thickness(1),
+                Background = new SolidColorBrush(Color.FromRgb(51, 66, 87))
+            };
+
+            var layout = new DockPanel();
+            border.Child = layout;
+
+            var titleBar = new Grid
+            {
+                Height = 20,
+                Background = new SolidColorBrush(Color.FromRgb(18, 32, 54))
+            };
+            titleBar.ColumnDefinitions.Add(new ColumnDefinition());
+            titleBar.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(24) });
+            titleBar.MouseLeftButtonDown += (_, _) => dialog.DragMove();
+            DockPanel.SetDock(titleBar, Dock.Top);
+            layout.Children.Add(titleBar);
+
+            var title = new TextBlock
+            {
+                Text = "Uwaga",
+                Margin = new Thickness(8, 0, 0, 0),
+                VerticalAlignment = VerticalAlignment.Center,
+                Foreground = Brushes.White,
+                FontSize = 12
+            };
+            titleBar.Children.Add(title);
+
+            var closeButton = new Button
+            {
+                Content = "x",
+                Width = 26,
+                Height = 32,
+                Margin = new Thickness(0, -9, 0, 0),
+                Background = Brushes.Transparent,
+                BorderThickness = new Thickness(0),
+                Foreground = Brushes.Red,
+                FontSize = 20
+            };
+            closeButton.Click += (_, _) => dialog.DialogResult = false;
+            Grid.SetColumn(closeButton, 1);
+            titleBar.Children.Add(closeButton);
+
+            var content = new Grid { Margin = new Thickness(22, 18, 22, 18) };
+            content.RowDefinitions.Add(new RowDefinition());
+            content.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            layout.Children.Add(content);
+
+            var message = new TextBlock
+            {
+                Text = "Zamknięcie okna spowoduje utratę wprowadzonych danych",
+                TextWrapping = TextWrapping.Wrap,
+                VerticalAlignment = VerticalAlignment.Center,
+                Foreground = Brushes.White,
+                FontSize = 13
+            };
+            content.Children.Add(message);
+
+            var buttons = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Right,
+                Margin = new Thickness(0, 18, 0, 0)
+            };
+            Grid.SetRow(buttons, 1);
+            content.Children.Add(buttons);
+
+            var okButton = CreateDialogButton("OK");
+            okButton.Click += (_, _) => dialog.DialogResult = true;
+            buttons.Children.Add(okButton);
+
+            var cancelButton = CreateDialogButton("Anuluj");
+            cancelButton.Margin = new Thickness(8, 0, 0, 0);
+            cancelButton.Click += (_, _) => dialog.DialogResult = false;
+            buttons.Children.Add(cancelButton);
+
+            dialog.Content = border;
+            return dialog.ShowDialog() == true;
+        }
+
+        private Button CreateDialogButton(string content)
+        {
+            return new Button
+            {
+                Content = content,
+                MinWidth = 76,
+                Height = 28,
+                Padding = new Thickness(12, 0, 12, 0),
+                Background = new SolidColorBrush(Color.FromRgb(37, 44, 61)),
+                BorderBrush = new SolidColorBrush(Color.FromRgb(136, 136, 136)),
+                BorderThickness = new Thickness(1),
+                Foreground = Brushes.White
+            };
         }
 
         private void CopyToClipboardButton_Click(object sender, RoutedEventArgs e)
@@ -322,9 +517,24 @@ namespace TESTER
             textBox?.SelectAll();
         }
 
+        private void AnimateDatabaseComboBox(bool show)
+        {
+            var heightAnimation = new DoubleAnimation
+            {
+                To = show ? 26 : 0,
+                Duration = TimeSpan.FromMilliseconds(180),
+                EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseInOut }
+            };
+
+            dbComboBoxContainer.BeginAnimation(HeightProperty, heightAnimation);
+        }
+
         private void ClearButton_Click(object sender, RoutedEventArgs e)
         {
             address.Text = string.Empty;
+            requiresManualDatabaseAddress = false;
+            dbComboBox.Text = String.Empty;
+            AnimateDatabaseComboBox(false);
 
             pac.Text = "Identyfikator pacjenta: \nIdentyfikator opieki: \nIdentyfikator pobytu: \nIdentyfikator zlecenia: ";
 
@@ -350,6 +560,9 @@ namespace TESTER
 
         private async void address_TextChanged(object sender, TextChangedEventArgs e)
         {
+            requiresManualDatabaseAddress = false;
+            dbComboBox.Text = String.Empty;
+            AnimateDatabaseComboBox(false);
             DataManager.NrRewizji = string.Empty;
             DataManager.AdresBazyDanych = string.Empty;
             DataManager.NrKompilacji = string.Empty;
@@ -374,6 +587,23 @@ namespace TESTER
                 {
                     // Pobranie danych
                     var (buildJsonLoaded, serviceJsonLoaded) = await DataManager.ScrapeDataAsync(baseLink);
+                    if (!String.Equals(baseLink, address.Text, StringComparison.Ordinal))
+                    {
+                        return;
+                    }
+
+                    requiresManualDatabaseAddress = serviceJsonLoaded && String.IsNullOrWhiteSpace(DataManager.AdresBazyDanych);
+                    if (requiresManualDatabaseAddress)
+                    {
+                        dbComboBox.ItemsSource = DatabaseAddressCache.GetDatabaseAddresses();
+                        if (DatabaseAddressCache.TryGet(baseLink, out string cachedDatabaseAddress))
+                        {
+                            dbComboBox.Text = cachedDatabaseAddress;
+                            DataManager.AdresBazyDanych = cachedDatabaseAddress;
+                        }
+                    }
+
+                    AnimateDatabaseComboBox(requiresManualDatabaseAddress);
                     await Task.Delay(1000);
 
                     // Ustawienie odpowiedniego wskaźnika w zależności od stanu połączenia

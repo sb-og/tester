@@ -7,37 +7,29 @@ public static class ConfigHelper
 {
     public const string ConfigFilePath = "config.json";
 
-    private static Dictionary<string, string> DefaultSettings = new Dictionary<string, string>
+    private static readonly Dictionary<string, string> DefaultSettings = new Dictionary<string, string>
     {
         { "User", "ADMIN" },
         { "Password", "ADMIN" },
         { "Topmost", "False" },
         { "Browser", "Edge" },
-        { "InstaFill", "False" },  
-        { "WarnOnExit", "False" }  
+        { "WindowOpacity", "1.0" },
+        { "InstaFill", "False" },
+        { "WarnOnExit", "False" },
+        { "GenerateEmptyFields", "True" }
         // Dodaj kolejne domyślne ustawienia w formie par klucz-wartość
     };
 
-    private static Dictionary<string, string> CurrentSettings;
+    private static Dictionary<string, string>? CurrentSettings;
 
     public static void CreateConfigFile()
     {
         try
         {
-            // Odczytaj aktualne ustawienia z pliku
-            CurrentSettings = ReadSettings();
-
-            // Sprawdź brakujące klucze i dodaj domyślne wartości
-            foreach (var defaultSetting in DefaultSettings)
-            {
-                if (!CurrentSettings.ContainsKey(defaultSetting.Key))
-                {
-                    CurrentSettings[defaultSetting.Key] = defaultSetting.Value;
-                }
-            }
+            var settings = GetSettings();
 
             // Zapisz zaktualizowane dane do pliku
-            SaveSettings(CurrentSettings);
+            SaveSettings(settings);
 
             Console.WriteLine("Plik konfiguracyjny został zaktualizowany pomyślnie.");
         }
@@ -52,7 +44,7 @@ public static class ConfigHelper
         try
         {
             // Otwórz plik konfiguracyjny do odczytu
-            string json = File.Exists(ConfigFilePath) ? File.ReadAllText(ConfigFilePath) : null;
+            string? json = File.Exists(ConfigFilePath) ? File.ReadAllText(ConfigFilePath) : null;
 
             if (!string.IsNullOrEmpty(json))
             {
@@ -65,6 +57,24 @@ public static class ConfigHelper
         }
 
         return new Dictionary<string, string>();
+    }
+
+    private static Dictionary<string, string> GetSettings()
+    {
+        if (CurrentSettings == null)
+        {
+            CurrentSettings = ReadSettings();
+        }
+
+        foreach (var defaultSetting in DefaultSettings)
+        {
+            if (!CurrentSettings.ContainsKey(defaultSetting.Key))
+            {
+                CurrentSettings[defaultSetting.Key] = defaultSetting.Value;
+            }
+        }
+
+        return CurrentSettings;
     }
 
     private static void SaveSettings(Dictionary<string, string> settings)
@@ -87,11 +97,13 @@ public static class ConfigHelper
     {
         try
         {
+            var settings = GetSettings();
+
             // Zaktualizuj wartość dla podanego klucza
-            CurrentSettings[key] = value;
+            settings[key] = value;
 
             // Zapisz zaktualizowane dane z powrotem do pliku
-            SaveSettings(CurrentSettings);
+            SaveSettings(settings);
 
             Console.WriteLine($"Ustawienie {key} zostało zapisane pomyślnie.");
         }
@@ -105,10 +117,17 @@ public static class ConfigHelper
     {
         try
         {
+            var settings = GetSettings();
+
             // Odczytaj wartość dla podanego klucza
-            if (CurrentSettings.ContainsKey(key))
+            if (settings.ContainsKey(key))
             {
-                return CurrentSettings[key];
+                return settings[key];
+            }
+
+            if (DefaultSettings.ContainsKey(key))
+            {
+                return DefaultSettings[key];
             }
         }
         catch (Exception ex)
@@ -116,6 +135,6 @@ public static class ConfigHelper
             Console.WriteLine($"Wystąpił błąd podczas odczytywania ustawienia: {ex.Message}");
         }
 
-        return null;
+        return String.Empty;
     }
 }
