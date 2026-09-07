@@ -129,7 +129,7 @@ namespace TESTER
         }
         private void AddMenuItem(string header, RoutedEventHandler handler)
         {
-            var menuItem = new MenuItem { Header = header };
+            var menuItem = new MenuItem { Header = header, StaysOpenOnClick = true };
             menuItem.Click += handler; // Przypisanie obsługi zdarzeń
             menu.ContextMenu.Items.Add(menuItem); // Dodawanie do menu kontekstowego
         }
@@ -141,7 +141,8 @@ namespace TESTER
             {
                 Header = header,
                 IsCheckable = true,
-                IsChecked = isChecked
+                IsChecked = isChecked,
+                StaysOpenOnClick = true
             };
 
             menuItem.Click += (_, _) =>
@@ -163,7 +164,7 @@ namespace TESTER
             AddOpacityMenuItem(opacityMenu, "75%", 0.75);
             AddOpacityMenuItem(opacityMenu, "80%", 0.8);
             AddOpacityMenuItem(opacityMenu, "90%", 0.9);
-            var autoOpacityMenuItem = new MenuItem { Header = "Auto" };
+            var autoOpacityMenuItem = new MenuItem { Header = "Auto", StaysOpenOnClick = true };
             autoOpacityMenuItem.Click += (_, _) => ApplyDefaultAutoWindowOpacity();
             opacityMenu.Items.Add(autoOpacityMenuItem);
             menu.ContextMenu.Items.Add(opacityMenu);
@@ -171,7 +172,7 @@ namespace TESTER
 
         private void AddOpacityMenuItem(MenuItem parentMenu, string header, double opacity)
         {
-            var menuItem = new MenuItem { Header = header };
+            var menuItem = new MenuItem { Header = header, StaysOpenOnClick = true };
             menuItem.Click += (_, _) => ApplyWindowOpacity(opacity.ToString(System.Globalization.CultureInfo.InvariantCulture), saveSetting: true);
             parentMenu.Items.Add(menuItem);
         }
@@ -186,11 +187,11 @@ namespace TESTER
         private void AddSaveMenu()
         {
             var saveMenu = new MenuItem { Header = "Zapis" };
-            var saveUserMenuItem = new MenuItem { Header = "Zapisz użytkownika" };
+            var saveUserMenuItem = new MenuItem { Header = "Zapisz użytkownika", StaysOpenOnClick = true };
             saveUserMenuItem.Click += (_, _) => SaveUser();
             saveMenu.Items.Add(saveUserMenuItem);
 
-            var saveBrowserMenuItem = new MenuItem { Header = "Zapisz przeglądarkę" };
+            var saveBrowserMenuItem = new MenuItem { Header = "Zapisz przeglądarkę", StaysOpenOnClick = true };
             saveBrowserMenuItem.Click += (_, _) => SaveBrowser();
             saveMenu.Items.Add(saveBrowserMenuItem);
 
@@ -199,7 +200,8 @@ namespace TESTER
             {
                 Header = "Autozapis",
                 IsCheckable = true,
-                IsChecked = autoSaveEnabled
+                IsChecked = autoSaveEnabled,
+                StaysOpenOnClick = true
             };
             autoSaveMenuItem.Click += (_, _) => ConfigHelper.SaveSetting("AutoSave", autoSaveMenuItem.IsChecked.ToString());
             saveMenu.Items.Add(autoSaveMenuItem);
@@ -210,8 +212,11 @@ namespace TESTER
                 Header = "Zapisuj cały stan",
                 IsCheckable = true,
                 IsChecked = saveEntireStateEnabled,
-                IsEnabled = autoSaveEnabled
+                IsEnabled = autoSaveEnabled,
+                StaysOpenOnClick = true,
+                ToolTip = autoSaveEnabled ? null : "Włącz autozapis, aby zapisywać cały stan."
             };
+            ToolTipService.SetShowOnDisabled(saveEntireStateMenuItem, true);
             saveEntireStateMenuItem.Click += (_, _) =>
             {
                 ConfigHelper.SaveSetting("SaveEntireState", saveEntireStateMenuItem.IsChecked.ToString());
@@ -233,6 +238,7 @@ namespace TESTER
             }
 
             saveEntireStateMenuItem.IsEnabled = autoSaveEnabled;
+            saveEntireStateMenuItem.ToolTip = autoSaveEnabled ? null : "Włącz autozapis, aby zapisywać cały stan.";
             if (!autoSaveEnabled)
             {
                 saveEntireStateMenuItem.IsChecked = false;
@@ -250,6 +256,8 @@ namespace TESTER
             }
 
             warnOnExitMenuItem.IsEnabled = !saveEntireStateEnabled;
+            warnOnExitMenuItem.ToolTip = saveEntireStateEnabled ? "Opcja jest niedostępna podczas zapisywania całego stanu." : null;
+            ToolTipService.SetShowOnDisabled(warnOnExitMenuItem, true);
             if (saveEntireStateEnabled)
             {
                 warnOnExitMenuItem.IsChecked = false;
