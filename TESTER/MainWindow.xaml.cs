@@ -46,17 +46,28 @@ namespace TESTER
         private const int HtBottomLeft = 16;
         private const int HtBottomRight = 17;
         private const double ResizeBorderThickness = 6;
+        private const string DefaultPatientIdentifiers = "Identyfikator pacjenta: \nIdentyfikator opieki: \nIdentyfikator pobytu: \nIdentyfikator zlecenia: ";
+        private const string DefaultUserName = "ADMIN";
+        private const string DefaultPassword = "ADMIN";
+        private const string DefaultBrowser = "Edge";
 
         private readonly Scroller _scroller;
         private bool isWindowLayoutReady = false;
         private bool isManualResizeInProgress = false;
         private bool isCustomMaximized = false;
+        private bool isOutputPanelCollapsed;
         private Rect normalWindowBoundsBeforeMaximize;
+        private GridLength expandedLeftColumnWidth;
+        private GridLength expandedRightColumnWidth;
         private bool isResizing = false;
         private Point lastMousePosition;
         private bool requiresManualDatabaseAddress;
+        private bool isUsingCachedDatabaseAddress;
+        private int databaseComboBoxAnimationVersion;
         private MenuItem? warnOnExitMenuItem;
         private MenuItem? saveEntireStateMenuItem;
+        private MenuItem? compactOutputModeMenuItem;
+        private MenuItem? instaFillMenuItem;
         private string? restoredDatabaseAddress;
 
 
@@ -91,6 +102,7 @@ namespace TESTER
                 ApplySavedSplitterLayout();
                 isWindowLayoutReady = true;
                 RestoreSavedApplicationState();
+                RestoreCompactOutputMode();
             };
 
 
@@ -99,9 +111,11 @@ namespace TESTER
 
 
             AddBooleanSettingMenuItem("Zawsze na wierzchu", "Topmost", value => Topmost = value);
-            AddBooleanSettingMenuItem("Automatyczne uzupełnianie", "InstaFill");
+            instaFillMenuItem = AddBooleanSettingMenuItem("Automatyczne uzupełnianie", "InstaFill");
+            AddAutoHideMenu();
             warnOnExitMenuItem = AddBooleanSettingMenuItem("Ostrzegaj przy zamykaniu", "WarnOnExit");
             AddBooleanSettingMenuItem("Generuj brakujące puste pola", "GenerateEmptyFields");
+            AddCompactOutputModeMenuItem();
             AddBooleanSettingMenuItem("Zachowaj rozmiar okna", "PreserveWindowSize", value =>
             {
                 if (value)
@@ -127,6 +141,37 @@ namespace TESTER
                 e.Handled = true;
             }
         }
+
+        private void MenuContextMenu_Opened(object sender, RoutedEventArgs e)
+        {
+            if (sender is not ContextMenu contextMenu)
+            {
+                return;
+            }
+
+            contextMenu.Opacity = 0;
+            contextMenu.RenderTransformOrigin = new Point(0, 0);
+            contextMenu.RenderTransform = new ScaleTransform(0.96, 0.96);
+            var animation = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(120));
+            contextMenu.BeginAnimation(OpacityProperty, animation);
+            ((ScaleTransform)contextMenu.RenderTransform).BeginAnimation(ScaleTransform.ScaleXProperty, new DoubleAnimation(0.96, 1, TimeSpan.FromMilliseconds(120)));
+            ((ScaleTransform)contextMenu.RenderTransform).BeginAnimation(ScaleTransform.ScaleYProperty, new DoubleAnimation(0.96, 1, TimeSpan.FromMilliseconds(120)));
+        }
+
+        private void SectionHeader_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button { Tag: FrameworkElement sectionContent })
+            {
+                bool isCollapsing = sectionContent.Visibility == Visibility.Visible;
+                SetSectionVisibility(sectionContent, !isCollapsing);
+
+                if (isCollapsing && (sender != testEnvironmentHeader || !isUsingCachedDatabaseAddress))
+                {
+                    ((Button)sender).Foreground = Brushes.White;
+                }
+            }
+        }
+
         private void AddMenuItem(string header, RoutedEventHandler handler)
         {
             var menuItem = new MenuItem { Header = header, StaysOpenOnClick = true };
@@ -156,17 +201,54 @@ namespace TESTER
             return menuItem;
         }
 
+        private void AddAutoHideMenu()
+        {
+            var autoHideMenu = new MenuItem { Header = "Autoukrywanie" };
+            AddAutoHideSettingMenuItem(autoHideMenu, "Automatycznie ukryj dane środowiska", "AutoHideTestEnvironmentDetails");
+            AddAutoHideSettingMenuItem(autoHideMenu, "Automatycznie ukryj dane przypadku", "AutoHideTestCaseDetails");
+            AddAutoHideSettingMenuItem(autoHideMenu, "Automatycznie ukryj opis ścieżki", "AutoHidePathDetails");
+            menu.ContextMenu.Items.Add(autoHideMenu);
+        }
+
+        private static void AddAutoHideSettingMenuItem(MenuItem parentMenu, string header, string settingKey)
+        {
+            bool isChecked = ConfigHelper.ReadSetting(settingKey) == "True";
+            var menuItem = new MenuItem
+            {
+                Header = header,
+                IsCheckable = true,
+                IsChecked = isChecked,
+                StaysOpenOnClick = true
+            };
+            menuItem.Click += (_, _) => ConfigHelper.SaveSetting(settingKey, menuItem.IsChecked.ToString());
+            parentMenu.Items.Add(menuItem);
+        }
+
+        private void AddCompactOutputModeMenuItem()
+        {
+            compactOutputModeMenuItem = new MenuItem
+            {
+                Header = "Tryb kompaktowy",
+                IsCheckable = true,
+                IsChecked = ConfigHelper.ReadSetting("AutoSave") == "True"
+                    && ConfigHelper.ReadSetting("CompactOutputMode") == "True",
+                StaysOpenOnClick = true
+            };
+            compactOutputModeMenuItem.Click += (_, _) => SetOutputPanelCompactMode(compactOutputModeMenuItem.IsChecked);
+            menu.ContextMenu.Items.Add(compactOutputModeMenuItem);
+        }
+
         private void AddOpacityMenu()
         {
             var opacityMenu = new MenuItem { Header = "Ustaw przezroczystość" };
-            AddOpacityMenuItem(opacityMenu, "Wyłącz przezroczystość", 1.0);
+            var autoOpacityMenuItem = new MenuItem { Header = "Auto", StaysOpenOnClick = true };
+            autoOpacityMenuItem.Click += (_, _) => ApplyDefaultAutoWindowOpacity();
+            opacityMenu.Items.Add(autoOpacityMenuItem);
             AddOpacityMenuItem(opacityMenu, "50%", 0.5);
             AddOpacityMenuItem(opacityMenu, "75%", 0.75);
             AddOpacityMenuItem(opacityMenu, "80%", 0.8);
             AddOpacityMenuItem(opacityMenu, "90%", 0.9);
-            var autoOpacityMenuItem = new MenuItem { Header = "Auto", StaysOpenOnClick = true };
-            autoOpacityMenuItem.Click += (_, _) => ApplyDefaultAutoWindowOpacity();
-            opacityMenu.Items.Add(autoOpacityMenuItem);
+            AddOpacityMenuItem(opacityMenu, "Wyłącz przezroczystość", 1.0);
             menu.ContextMenu.Items.Add(opacityMenu);
         }
 
@@ -529,7 +611,88 @@ namespace TESTER
 
         private void GridSplitter_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
         {
-            SaveWindowLayout(saveWindowSize: false, saveSplitterLayout: true);
+            if (!isOutputPanelCollapsed)
+            {
+                SaveWindowLayout(saveWindowSize: false, saveSplitterLayout: true);
+            }
+        }
+
+        private void GridSplitter_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            SetOutputPanelCompactMode(!isOutputPanelCollapsed);
+        }
+
+        private void SetOutputPanelCompactMode(bool isCompactMode)
+        {
+            if (isCompactMode)
+            {
+                ConfigHelper.SaveSetting("InstaFill", "True");
+                HideOutputPanel();
+            }
+            else
+            {
+                ShowOutputPanel();
+            }
+
+            if (ConfigHelper.ReadSetting("AutoSave") == "True")
+            {
+                ConfigHelper.SaveSetting("CompactOutputMode", isCompactMode.ToString());
+            }
+
+            if (compactOutputModeMenuItem != null)
+            {
+                compactOutputModeMenuItem.IsChecked = isCompactMode;
+            }
+
+            if (instaFillMenuItem != null)
+            {
+                instaFillMenuItem.IsChecked = true;
+                instaFillMenuItem.IsEnabled = !isCompactMode;
+                instaFillMenuItem.ToolTip = isCompactMode
+                    ? "Opcja jest zawsze włączona w trybie kompaktowym."
+                    : null;
+            }
+        }
+
+        private void HideOutputPanel()
+        {
+            expandedLeftColumnWidth = leftContentColumn.Width;
+            expandedRightColumnWidth = rightContentColumn.Width;
+            isOutputPanelCollapsed = true;
+            outputPanel.Visibility = Visibility.Collapsed;
+            expandedOutputActions.Visibility = Visibility.Collapsed;
+            compactOutputActions.Visibility = Visibility.Visible;
+            compactOutputActions.Opacity = 0;
+            compactOutputActions.RenderTransform = new TranslateTransform(12, 0);
+            compactOutputActions.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(160)));
+            ((TranslateTransform)compactOutputActions.RenderTransform).BeginAnimation(TranslateTransform.XProperty, new DoubleAnimation(12, 0, TimeSpan.FromMilliseconds(160)));
+            rightContentColumn.MinWidth = 32;
+            rightContentColumn.Width = new GridLength(32);
+            leftContentColumn.Width = new GridLength(1, GridUnitType.Star);
+        }
+
+        private void ShowOutputPanel()
+        {
+            isOutputPanelCollapsed = false;
+            outputPanel.Visibility = Visibility.Visible;
+            outputPanel.Opacity = 0;
+            outputPanel.RenderTransform = new TranslateTransform(12, 0);
+            outputPanel.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(160)));
+            ((TranslateTransform)outputPanel.RenderTransform).BeginAnimation(TranslateTransform.XProperty, new DoubleAnimation(12, 0, TimeSpan.FromMilliseconds(160)));
+            expandedOutputActions.Visibility = Visibility.Visible;
+            compactOutputActions.Visibility = Visibility.Collapsed;
+            rightContentColumn.MinWidth = 150;
+            leftContentColumn.Width = expandedLeftColumnWidth;
+            rightContentColumn.Width = expandedRightColumnWidth;
+        }
+
+        private void RestoreCompactOutputMode()
+        {
+            if (ConfigHelper.ReadSetting("AutoSave") == "True"
+                && ConfigHelper.ReadSetting("CompactOutputMode") == "True")
+            {
+                SetOutputPanelCompactMode(true);
+            }
         }
 
         private void MainWindow_SourceInitialized(object? sender, EventArgs e)
@@ -650,6 +813,8 @@ namespace TESTER
 
         private async void autoUpdateOutput(object sender, RoutedEventArgs e)
         {
+            CollapseCompletedSections();
+
             if (ConfigHelper.ReadSetting("InstaFill") == "True")
             {
                 updateOutput(sender, e);
@@ -762,6 +927,7 @@ namespace TESTER
             {
                 SaveManualDatabaseAddress();
                 updateOutput(sender, e);
+                CollapseCompletedSections();
             }
         }
 
@@ -791,6 +957,134 @@ namespace TESTER
 
             dbComboBox.Text = String.Concat(pastedText.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)).Trim();
             e.CancelCommand();
+        }
+
+        private void Jos_Pasting(object sender, DataObjectPastingEventArgs e)
+        {
+            if (sender is not TextBox textBox || !e.DataObject.GetDataPresent(DataFormats.UnicodeText, true))
+            {
+                return;
+            }
+
+            if (e.DataObject.GetData(DataFormats.UnicodeText) is string pastedText)
+            {
+                textBox.SelectedText = pastedText;
+                e.CancelCommand();
+            }
+        }
+
+        private void TestEnvironmentDetails_LostKeyboardFocus(object sender, RoutedEventArgs e)
+        {
+            Dispatcher.BeginInvoke(CollapseCompletedSections);
+        }
+
+        private void SectionDetails_LostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
+        {
+            Dispatcher.BeginInvoke(CollapseCompletedSections);
+        }
+
+        private void TestCaseInput_LostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
+        {
+            Dispatcher.BeginInvoke(CollapseCompletedSections, System.Windows.Threading.DispatcherPriority.ContextIdle);
+        }
+
+        private void CollapseCompletedSections()
+        {
+            if (ConfigHelper.ReadSetting("AutoHideTestEnvironmentDetails") == "True")
+            {
+                CollapseTestEnvironmentDetails();
+            }
+
+            if (ConfigHelper.ReadSetting("AutoHideTestCaseDetails") == "True")
+            {
+                CollapseTestCaseDetails();
+            }
+
+            if (ConfigHelper.ReadSetting("AutoHidePathDetails") == "True")
+            {
+                CollapsePathDetails();
+            }
+        }
+
+        private void CollapseTestEnvironmentDetails()
+        {
+            if (!String.IsNullOrWhiteSpace(address.Text)
+                && !String.IsNullOrWhiteSpace(user.Text)
+                && !String.IsNullOrWhiteSpace(pwd.Text)
+                && !String.IsNullOrWhiteSpace(browserComboBox.Text)
+                && !String.IsNullOrWhiteSpace(DataManager.AdresBazyDanych))
+            {
+                testEnvironmentHeader.Foreground = isUsingCachedDatabaseAddress
+                    ? Brushes.Gold
+                    : requiresManualDatabaseAddress ? Brushes.Gold : Brushes.LimeGreen;
+                SetSectionVisibility(testEnvironmentDetails, false);
+            }
+        }
+
+        private void CollapseTestCaseDetails()
+        {
+            bool havePatientIdentifiersChanged = !String.Equals(
+                pac.Text.Replace("\r\n", "\n").TrimEnd(),
+                DefaultPatientIdentifiers.TrimEnd(),
+                StringComparison.Ordinal);
+
+            if (!String.IsNullOrWhiteSpace(pesel.Text)
+                && !String.IsNullOrWhiteSpace(jos.Text)
+                && havePatientIdentifiersChanged
+                && !pesel.IsKeyboardFocusWithin
+                && !jos.IsKeyboardFocusWithin
+                && !pac.IsKeyboardFocusWithin)
+            {
+                testCaseHeader.Foreground = Brushes.LimeGreen;
+                SetSectionVisibility(testCaseDetails, false);
+            }
+        }
+
+        private void CollapsePathDetails()
+        {
+            if (path is not null
+                && pathDetails is not null
+                && !path.IsKeyboardFocusWithin
+                && !String.IsNullOrWhiteSpace(path.Text))
+            {
+                pathHeader.Foreground = Brushes.LimeGreen;
+                SetSectionVisibility(pathDetails, false);
+            }
+        }
+
+        private static void SetSectionVisibility(FrameworkElement section, bool isVisible)
+        {
+            if (isVisible)
+            {
+                if (section.Visibility == Visibility.Visible)
+                {
+                    return;
+                }
+
+                section.Visibility = Visibility.Visible;
+                section.ClearValue(HeightProperty);
+                section.Measure(new Size(section.ActualWidth, Double.PositiveInfinity));
+                double targetHeight = section.DesiredSize.Height;
+                section.Height = 0;
+                var expandAnimation = new DoubleAnimation(0, targetHeight, TimeSpan.FromMilliseconds(160));
+                expandAnimation.Completed += (_, _) => section.ClearValue(HeightProperty);
+                section.BeginAnimation(HeightProperty, expandAnimation);
+                return;
+            }
+
+            if (section.Visibility != Visibility.Visible)
+            {
+                return;
+            }
+
+            var collapseAnimation = new DoubleAnimation(section.ActualHeight, 0, TimeSpan.FromMilliseconds(140));
+            collapseAnimation.Completed += (_, _) =>
+            {
+                section.BeginAnimation(HeightProperty, null);
+                section.ClearValue(HeightProperty);
+                section.Visibility = Visibility.Collapsed;
+            };
+            section.BeginAnimation(HeightProperty, collapseAnimation);
         }
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)
@@ -881,7 +1175,7 @@ namespace TESTER
 
             var message = new TextBlock
             {
-                Text = "Zamknięcie okna spowoduje utratę wprowadzonych danych",
+                Text = "Zamknięcie okna może spowodować utratę wprowadzonych danych",
                 TextWrapping = TextWrapping.Wrap,
                 VerticalAlignment = VerticalAlignment.Center,
                 Foreground = Brushes.White,
@@ -946,14 +1240,63 @@ namespace TESTER
             textBox?.SelectAll();
         }
 
+        private void ClearTestEnvironmentSection_Click(object sender, RoutedEventArgs e)
+        {
+            requiresManualDatabaseAddress = false;
+            isUsingCachedDatabaseAddress = false;
+            address.Text = String.Empty;
+            dbComboBox.Text = String.Empty;
+            browserComboBox.Text = DefaultBrowser;
+            user.Text = ConfigHelper.ReadSetting("User");
+            pwd.Text = ConfigHelper.ReadSetting("Password");
+            DataManager.NrKompilacji = String.Empty;
+            DataManager.DataKompilacji = String.Empty;
+            DataManager.NrRewizji = String.Empty;
+            DataManager.AdresBazyDanych = String.Empty;
+            AnimateDatabaseComboBox(false);
+            ImageBehavior.SetAnimatedSource(ConnectionIndicator, null);
+            SetSectionVisibility(testEnvironmentDetails, true);
+            testEnvironmentHeader.Foreground = Brushes.White;
+            testEnvironmentHeader.ToolTip = null;
+        }
+
+        private void ClearTestCaseSection_Click(object sender, RoutedEventArgs e)
+        {
+            pesel.Text = String.Empty;
+            jos.Text = String.Empty;
+            pac.Text = DefaultPatientIdentifiers;
+            SetSectionVisibility(testCaseDetails, true);
+            testCaseHeader.Foreground = Brushes.White;
+        }
+
+        private void ClearPathSection_Click(object sender, RoutedEventArgs e)
+        {
+            path.Text = String.Empty;
+            SetSectionVisibility(pathDetails, true);
+            pathHeader.Foreground = Brushes.White;
+        }
+
         private void AnimateDatabaseComboBox(bool show)
         {
+            int animationVersion = ++databaseComboBoxAnimationVersion;
+            dbComboBoxContainer.Visibility = Visibility.Visible;
             var heightAnimation = new DoubleAnimation
             {
                 To = show ? 26 : 0,
                 Duration = TimeSpan.FromMilliseconds(180),
                 EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseInOut }
             };
+
+            if (!show)
+            {
+                heightAnimation.Completed += (_, _) =>
+                {
+                    if (animationVersion == databaseComboBoxAnimationVersion)
+                    {
+                        dbComboBoxContainer.Visibility = Visibility.Collapsed;
+                    }
+                };
+            }
 
             dbComboBoxContainer.BeginAnimation(HeightProperty, heightAnimation);
         }
@@ -962,10 +1305,12 @@ namespace TESTER
         {
             address.Text = string.Empty;
             requiresManualDatabaseAddress = false;
+            isUsingCachedDatabaseAddress = false;
+            UpdateCachedDatabaseAddressIndicator();
             dbComboBox.Text = String.Empty;
             AnimateDatabaseComboBox(false);
 
-            pac.Text = "Identyfikator pacjenta: \nIdentyfikator opieki: \nIdentyfikator pobytu: \nIdentyfikator zlecenia: ";
+            pac.Text = DefaultPatientIdentifiers;
 
             pesel.Text = string.Empty;
             jos.Text = string.Empty;
@@ -984,12 +1329,20 @@ namespace TESTER
             ImageBehavior.SetAnimatedSource(ConnectionIndicator, null);
 
             output.Text = string.Empty;
+            SetSectionVisibility(testEnvironmentDetails, true);
+            SetSectionVisibility(testCaseDetails, true);
+            SetSectionVisibility(pathDetails, true);
+            testEnvironmentHeader.Foreground = Brushes.White;
+            testCaseHeader.Foreground = Brushes.White;
+            pathHeader.Foreground = Brushes.White;
         }
 
 
         private async void address_TextChanged(object sender, TextChangedEventArgs e)
         {
             requiresManualDatabaseAddress = false;
+            isUsingCachedDatabaseAddress = false;
+            UpdateCachedDatabaseAddressIndicator();
             dbComboBox.Text = String.Empty;
             AnimateDatabaseComboBox(false);
             DataManager.NrRewizji = string.Empty;
@@ -1021,6 +1374,9 @@ namespace TESTER
                         return;
                     }
 
+                    bool hasIncompleteServiceData = String.IsNullOrWhiteSpace(DataManager.AdresBazyDanych)
+                        || String.IsNullOrWhiteSpace(DataManager.NrRewizji);
+                    bool hasCachedDatabaseAddress = DatabaseAddressCache.TryGet(baseLink, out string cachedDatabaseAddress);
                     requiresManualDatabaseAddress = serviceJsonLoaded && String.IsNullOrWhiteSpace(DataManager.AdresBazyDanych);
                     if (requiresManualDatabaseAddress)
                     {
@@ -1030,14 +1386,21 @@ namespace TESTER
                             dbComboBox.Text = restoredDatabaseAddress;
                             DataManager.AdresBazyDanych = restoredDatabaseAddress;
                         }
-                        else if (DatabaseAddressCache.TryGet(baseLink, out string cachedDatabaseAddress))
+                        else if (hasCachedDatabaseAddress)
                         {
                             dbComboBox.Text = cachedDatabaseAddress;
                             DataManager.AdresBazyDanych = cachedDatabaseAddress;
+                            isUsingCachedDatabaseAddress = true;
                         }
+                    }
+                    else if (!serviceJsonLoaded && hasCachedDatabaseAddress)
+                    {
+                        DataManager.AdresBazyDanych = cachedDatabaseAddress;
+                        isUsingCachedDatabaseAddress = true;
                     }
 
                     restoredDatabaseAddress = null;
+                    UpdateCachedDatabaseAddressIndicator();
 
                     AnimateDatabaseComboBox(requiresManualDatabaseAddress);
                     await Task.Delay(1000);
@@ -1046,19 +1409,21 @@ namespace TESTER
                     var bitmap = new BitmapImage();
                     bitmap.BeginInit();
 
-                    if (!buildJsonLoaded && !serviceJsonLoaded)
+                    if (!buildJsonLoaded && !serviceJsonLoaded && !isUsingCachedDatabaseAddress)
                     {
                         bitmap.UriSource = new Uri("resources/checkmark_red.png", UriKind.RelativeOrAbsolute);
                     }
-                    else if (buildJsonLoaded && !serviceJsonLoaded)
+                    else if (!buildJsonLoaded || !serviceJsonLoaded || hasIncompleteServiceData)
                     {
                         bitmap.UriSource = new Uri("resources/checkmark_yellow.png", UriKind.RelativeOrAbsolute);
                         updateOutput(sender, e);
+                        CollapseCompletedSections();
                     }
-                    else if (buildJsonLoaded && serviceJsonLoaded)
+                    else
                     {
                         bitmap.UriSource = new Uri("resources/checkmark_green.png", UriKind.RelativeOrAbsolute);
                         updateOutput(sender, e);
+                        CollapseCompletedSections();
                     }
 
                     bitmap.EndInit();
@@ -1077,6 +1442,14 @@ namespace TESTER
                 ImageBehavior.SetAnimatedSource(ConnectionIndicator, null);
                 SetAddressColumnSpan(false);
             }
+        }
+
+        private void UpdateCachedDatabaseAddressIndicator()
+        {
+            testEnvironmentHeader.Foreground = isUsingCachedDatabaseAddress ? Brushes.Gold : Brushes.White;
+            testEnvironmentHeader.ToolTip = isUsingCachedDatabaseAddress
+                ? $"zapamiętana baza: {DataManager.AdresBazyDanych}"
+                : null;
         }
         private void ConnectionIndicator_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
