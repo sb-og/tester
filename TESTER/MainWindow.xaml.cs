@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -25,6 +26,8 @@ using WpfAnimatedGif;
 using System.Diagnostics.Eventing.Reader;
 using System.Runtime.InteropServices;
 using System.CodeDom;
+using System.Text.RegularExpressions;
+using SharpVectors.Converters;
 
 
 namespace TESTER
@@ -64,6 +67,7 @@ namespace TESTER
         private bool requiresManualDatabaseAddress;
         private bool isUsingCachedDatabaseAddress;
         private int databaseComboBoxAnimationVersion;
+        private bool isFormattingDescription;
         private MenuItem? warnOnExitMenuItem;
         private MenuItem? saveEntireStateMenuItem;
         private MenuItem? compactOutputModeMenuItem;
@@ -103,6 +107,7 @@ namespace TESTER
                 isWindowLayoutReady = true;
                 RestoreSavedApplicationState();
                 RestoreCompactOutputMode();
+                UpdateClearAllButtonState();
             };
 
 
@@ -112,7 +117,8 @@ namespace TESTER
 
             AddBooleanSettingMenuItem("Zawsze na wierzchu", "Topmost", value => Topmost = value);
             instaFillMenuItem = AddBooleanSettingMenuItem("Automatyczne uzupełnianie", "InstaFill");
-            AddAutoHideMenu();
+            AddBooleanSettingMenuItem("Włącz automatyczne zwijanie sekcji", "AutoHideSections");
+            AddBooleanSettingMenuItem("Pokazuj zakładki rezultatu", "ShowResultTabs", ApplyResultTabsVisibility);
             warnOnExitMenuItem = AddBooleanSettingMenuItem("Ostrzegaj przy zamykaniu", "WarnOnExit");
             AddBooleanSettingMenuItem("Generuj brakujące puste pola", "GenerateEmptyFields");
             AddCompactOutputModeMenuItem();
@@ -126,6 +132,16 @@ namespace TESTER
             AddOpacityMenu();
             AddSaveMenu();
             AddMenuItem("Otwórz config", MenuOpenConfig_Click);
+            ApplyResultTabsVisibility(ConfigHelper.ReadSetting("ShowResultTabs") == "True");
+        }
+
+        private void ApplyResultTabsVisibility(bool isVisible)
+        {
+            resultModeTabs.Visibility = isVisible ? Visibility.Visible : Visibility.Collapsed;
+            if (!isVisible && resultModeTabs.SelectedIndex != 0)
+            {
+                resultModeTabs.SelectedIndex = 0;
+            }
         }
 
         private void Menu_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -164,6 +180,9 @@ namespace TESTER
             {
                 bool isCollapsing = sectionContent.Visibility == Visibility.Visible;
                 SetSectionVisibility(sectionContent, !isCollapsing);
+                Dispatcher.BeginInvoke(
+                    new Action(UpdateClearAllButtonState),
+                    System.Windows.Threading.DispatcherPriority.ContextIdle);
 
                 if (isCollapsing && (sender != testEnvironmentHeader || !isUsingCachedDatabaseAddress))
                 {
@@ -199,29 +218,6 @@ namespace TESTER
 
             menu.ContextMenu.Items.Add(menuItem);
             return menuItem;
-        }
-
-        private void AddAutoHideMenu()
-        {
-            var autoHideMenu = new MenuItem { Header = "Autoukrywanie" };
-            AddAutoHideSettingMenuItem(autoHideMenu, "Automatycznie ukryj dane środowiska", "AutoHideTestEnvironmentDetails");
-            AddAutoHideSettingMenuItem(autoHideMenu, "Automatycznie ukryj dane przypadku", "AutoHideTestCaseDetails");
-            AddAutoHideSettingMenuItem(autoHideMenu, "Automatycznie ukryj opis ścieżki", "AutoHidePathDetails");
-            menu.ContextMenu.Items.Add(autoHideMenu);
-        }
-
-        private static void AddAutoHideSettingMenuItem(MenuItem parentMenu, string header, string settingKey)
-        {
-            bool isChecked = ConfigHelper.ReadSetting(settingKey) == "True";
-            var menuItem = new MenuItem
-            {
-                Header = header,
-                IsCheckable = true,
-                IsChecked = isChecked,
-                StaysOpenOnClick = true
-            };
-            menuItem.Click += (_, _) => ConfigHelper.SaveSetting(settingKey, menuItem.IsChecked.ToString());
-            parentMenu.Items.Add(menuItem);
         }
 
         private void AddCompactOutputModeMenuItem()
@@ -367,7 +363,7 @@ namespace TESTER
             ConfigHelper.SaveSetting("SavedJos", jos.Text);
             ConfigHelper.SaveSetting("SavedPatient", pac.Text);
             ConfigHelper.SaveSetting("SavedPath", path.Text);
-            ConfigHelper.SaveSetting("SavedDescription", desc.Text);
+            ConfigHelper.SaveSetting("SavedDescription", GetDescriptionText());
             ConfigHelper.SaveSetting("SavedOutput", output.Text);
         }
 
@@ -383,7 +379,7 @@ namespace TESTER
             jos.Text = ConfigHelper.ReadSetting("SavedJos");
             pac.Text = ConfigHelper.ReadSetting("SavedPatient");
             path.Text = ConfigHelper.ReadSetting("SavedPath");
-            desc.Text = ConfigHelper.ReadSetting("SavedDescription");
+            SetDescriptionText(ConfigHelper.ReadSetting("SavedDescription"));
             output.Text = ConfigHelper.ReadSetting("SavedOutput");
             restoredDatabaseAddress = ConfigHelper.ReadSetting("SavedDatabaseAddress");
             address.Text = ConfigHelper.ReadSetting("SavedAddress");
@@ -811,9 +807,29 @@ namespace TESTER
 
         }
 
-        private async void autoUpdateOutput(object sender, RoutedEventArgs e)
+        private void autoUpdateOutput(object sender, RoutedEventArgs e)
         {
-            CollapseCompletedSections();
+            if (!IsLoaded)
+            {
+                return;
+            }
+
+            if (sender == path)
+            {
+                Dispatcher.BeginInvoke(
+                    new Action(RefreshPathLayout),
+                    System.Windows.Threading.DispatcherPriority.ContextIdle);
+            }
+
+            if (sender == desc && resultModeTabs?.SelectedIndex == 1)
+            {
+                RenderOutputMarkup();
+            }
+
+            if (sender == desc)
+            {
+                ApplyDescriptionMarkupColors();
+            }
 
             if (ConfigHelper.ReadSetting("InstaFill") == "True")
             {
@@ -821,17 +837,21 @@ namespace TESTER
             }
 
         }
-        private async void updateOutput(object sender, RoutedEventArgs e)
+        private void updateOutput(object sender, RoutedEventArgs e)
         {
-            await Task.Delay(1);
+            if (!IsLoaded)
+            {
+                return;
+            }
+
             string ip = address.Text;
             string idkjos = jos.Text;
             string pacjent = pac.Text;
             string jednostka = jos.Text;
             string sciezka = path.Text;
-            string opis = desc.Text;
+            string opis = GetDescriptionText();
             string nrpesel = pesel.Text;
-            string podsumowanie = desc.Text;
+            string podsumowanie = GetDescriptionText();
 
             //stare uzupełnianie przeglądarki    string webengine = browser.Text.Replace(Environment.NewLine, " '
             string username = user.Text;
@@ -927,7 +947,6 @@ namespace TESTER
             {
                 SaveManualDatabaseAddress();
                 updateOutput(sender, e);
-                CollapseCompletedSections();
             }
         }
 
@@ -973,87 +992,25 @@ namespace TESTER
             }
         }
 
-        private void TestEnvironmentDetails_LostKeyboardFocus(object sender, RoutedEventArgs e)
+        private void Description_GotKeyboardFocus(object sender, RoutedEventArgs e)
         {
-            Dispatcher.BeginInvoke(CollapseCompletedSections);
-        }
-
-        private void SectionDetails_LostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
-        {
-            Dispatcher.BeginInvoke(CollapseCompletedSections);
-        }
-
-        private void TestCaseInput_LostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
-        {
-            Dispatcher.BeginInvoke(CollapseCompletedSections, System.Windows.Threading.DispatcherPriority.ContextIdle);
-        }
-
-        private void CollapseCompletedSections()
-        {
-            if (ConfigHelper.ReadSetting("AutoHideTestEnvironmentDetails") == "True")
+            if (ConfigHelper.ReadSetting("AutoHideSections") != "True")
             {
-                CollapseTestEnvironmentDetails();
+                return;
             }
 
-            if (ConfigHelper.ReadSetting("AutoHideTestCaseDetails") == "True")
-            {
-                CollapseTestCaseDetails();
-            }
-
-            if (ConfigHelper.ReadSetting("AutoHidePathDetails") == "True")
-            {
-                CollapsePathDetails();
-            }
+            SetSectionVisibility(testEnvironmentDetails, false);
+            SetSectionVisibility(testCaseDetails, false);
+            SetSectionVisibility(pathDetails, false);
+            Dispatcher.BeginInvoke(
+                new Action(UpdateClearAllButtonState),
+                System.Windows.Threading.DispatcherPriority.ContextIdle);
         }
 
-        private void CollapseTestEnvironmentDetails()
+        private void SetSectionVisibility(FrameworkElement section, bool isVisible)
         {
-            if (!String.IsNullOrWhiteSpace(address.Text)
-                && !String.IsNullOrWhiteSpace(user.Text)
-                && !String.IsNullOrWhiteSpace(pwd.Text)
-                && !String.IsNullOrWhiteSpace(browserComboBox.Text)
-                && !String.IsNullOrWhiteSpace(DataManager.AdresBazyDanych))
-            {
-                testEnvironmentHeader.Foreground = isUsingCachedDatabaseAddress
-                    ? Brushes.Gold
-                    : requiresManualDatabaseAddress ? Brushes.Gold : Brushes.LimeGreen;
-                SetSectionVisibility(testEnvironmentDetails, false);
-            }
-        }
+            UpdateSectionActionIcon(section, isVisible);
 
-        private void CollapseTestCaseDetails()
-        {
-            bool havePatientIdentifiersChanged = !String.Equals(
-                pac.Text.Replace("\r\n", "\n").TrimEnd(),
-                DefaultPatientIdentifiers.TrimEnd(),
-                StringComparison.Ordinal);
-
-            if (!String.IsNullOrWhiteSpace(pesel.Text)
-                && !String.IsNullOrWhiteSpace(jos.Text)
-                && havePatientIdentifiersChanged
-                && !pesel.IsKeyboardFocusWithin
-                && !jos.IsKeyboardFocusWithin
-                && !pac.IsKeyboardFocusWithin)
-            {
-                testCaseHeader.Foreground = Brushes.LimeGreen;
-                SetSectionVisibility(testCaseDetails, false);
-            }
-        }
-
-        private void CollapsePathDetails()
-        {
-            if (path is not null
-                && pathDetails is not null
-                && !path.IsKeyboardFocusWithin
-                && !String.IsNullOrWhiteSpace(path.Text))
-            {
-                pathHeader.Foreground = Brushes.LimeGreen;
-                SetSectionVisibility(pathDetails, false);
-            }
-        }
-
-        private static void SetSectionVisibility(FrameworkElement section, bool isVisible)
-        {
             if (isVisible)
             {
                 if (section.Visibility == Visibility.Visible)
@@ -1067,7 +1024,11 @@ namespace TESTER
                 double targetHeight = section.DesiredSize.Height;
                 section.Height = 0;
                 var expandAnimation = new DoubleAnimation(0, targetHeight, TimeSpan.FromMilliseconds(160));
-                expandAnimation.Completed += (_, _) => section.ClearValue(HeightProperty);
+                expandAnimation.Completed += (_, _) =>
+                {
+                    section.ClearValue(HeightProperty);
+                    UpdateClearAllButtonState();
+                };
                 section.BeginAnimation(HeightProperty, expandAnimation);
                 return;
             }
@@ -1083,8 +1044,35 @@ namespace TESTER
                 section.BeginAnimation(HeightProperty, null);
                 section.ClearValue(HeightProperty);
                 section.Visibility = Visibility.Collapsed;
+                UpdateClearAllButtonState();
             };
             section.BeginAnimation(HeightProperty, collapseAnimation);
+        }
+
+        private void UpdateSectionActionIcon(FrameworkElement section, bool isVisible)
+        {
+            TextBlock? expandIcon = section switch
+            {
+                _ when section == testEnvironmentDetails => testEnvironmentExpandIcon,
+                _ when section == testCaseDetails => testCaseExpandIcon,
+                _ when section == pathDetails => pathExpandIcon,
+                _ => null
+            };
+            FrameworkElement? trashIcon = section switch
+            {
+                _ when section == testEnvironmentDetails => testEnvironmentTrashIcon,
+                _ when section == testCaseDetails => testCaseTrashIcon,
+                _ when section == pathDetails => pathTrashIcon,
+                _ => null
+            };
+
+            if (expandIcon is null || trashIcon is null)
+            {
+                return;
+            }
+
+            expandIcon.Visibility = isVisible ? Visibility.Collapsed : Visibility.Visible;
+            trashIcon.Visibility = isVisible ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)
@@ -1222,7 +1210,430 @@ namespace TESTER
 
         private void CopyToClipboardButton_Click(object sender, RoutedEventArgs e)
         {
+            updateOutput(sender, e);
             Clipboard.SetText(output.Text);
+        }
+
+        private void MarkupButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not Button { Tag: string markup })
+            {
+                return;
+            }
+
+            InsertMarkup(markup);
+        }
+
+        private void MainWindow_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            Key key = e.Key == Key.System ? e.SystemKey : e.Key;
+            ModifierKeys modifiers = e.KeyboardDevice.Modifiers | Keyboard.Modifiers;
+            bool controlPressed = modifiers.HasFlag(ModifierKeys.Control)
+                || Keyboard.IsKeyDown(Key.LeftCtrl)
+                || Keyboard.IsKeyDown(Key.RightCtrl);
+            bool shiftPressed = modifiers.HasFlag(ModifierKeys.Shift)
+                || Keyboard.IsKeyDown(Key.LeftShift)
+                || Keyboard.IsKeyDown(Key.RightShift);
+
+            TextBoxBase? textBox = desc.IsKeyboardFocusWithin
+                ? desc
+                : Keyboard.FocusedElement as TextBoxBase;
+            if (textBox is not null && !textBox.IsReadOnly)
+            {
+                if (key == Key.Z && controlPressed && !shiftPressed && textBox.CanUndo)
+                {
+                    textBox.Undo();
+                    e.Handled = true;
+                    return;
+                }
+
+                if (key == Key.Z
+                    && controlPressed
+                    && shiftPressed
+                    && textBox.CanRedo)
+                {
+                    textBox.Redo();
+                    e.Handled = true;
+                    return;
+                }
+            }
+
+            if (!Keyboard.IsKeyDown(Key.LeftAlt) || Keyboard.IsKeyDown(Key.RightAlt))
+            {
+                return;
+            }
+
+            string? markup = key switch
+            {
+                Key.Z => "(/)",
+                Key.X => "(x)",
+                Key.C => "(!)",
+                Key.V => "(?)",
+                _ => null
+            };
+
+            if (markup is null)
+            {
+                return;
+            }
+
+            InsertMarkup(markup);
+            e.Handled = true;
+        }
+
+        private void InsertMarkup(string markup)
+        {
+            desc.Selection.Text = markup;
+            desc.CaretPosition = desc.Selection.End;
+            desc.Focus();
+        }
+
+        private string GetDescriptionText()
+        {
+            StringBuilder description = new();
+            bool hasParagraph = false;
+
+            foreach (Block block in desc.Document.Blocks)
+            {
+                if (block is not Paragraph paragraph)
+                {
+                    continue;
+                }
+
+                if (hasParagraph)
+                {
+                    description.Append("\r\n\r\n");
+                }
+
+                AppendInlineText(paragraph.Inlines, description);
+                hasParagraph = true;
+            }
+
+            return description.ToString().TrimEnd('\r', '\n');
+        }
+
+        private static void AppendInlineText(InlineCollection inlines, StringBuilder description)
+        {
+            foreach (Inline inline in inlines)
+            {
+                switch (inline)
+                {
+                    case Run run:
+                        description.Append(run.Text);
+                        break;
+                    case LineBreak:
+                        description.Append("\r\n");
+                        break;
+                    case Span span:
+                        AppendInlineText(span.Inlines, description);
+                        break;
+                }
+            }
+        }
+
+        private void SetDescriptionText(string text)
+        {
+            new TextRange(desc.Document.ContentStart, desc.Document.ContentEnd).Text = text;
+            ApplyDescriptionMarkupColors();
+        }
+
+        private void ApplyDescriptionMarkupColors()
+        {
+            if (isFormattingDescription)
+            {
+                return;
+            }
+
+            isFormattingDescription = true;
+            try
+            {
+                TextRange documentRange = new TextRange(desc.Document.ContentStart, desc.Document.ContentEnd);
+                documentRange.ApplyPropertyValue(TextElement.ForegroundProperty, Brushes.White);
+
+                List<(TextPointer Start, TextPointer End, Brush Color)> rangesToColor = new();
+                TextPointer? pointer = desc.Document.ContentStart;
+                while (pointer is not null)
+                {
+                    if (pointer.GetPointerContext(LogicalDirection.Forward) == TextPointerContext.Text)
+                    {
+                        string runText = pointer.GetTextInRun(LogicalDirection.Forward);
+                        foreach (Match match in Regex.Matches(runText, @"\(/\)|\(x\)|\(!\)|\(\?\)"))
+                        {
+                            TextPointer start = pointer.GetPositionAtOffset(match.Index, LogicalDirection.Forward);
+                            TextPointer end = pointer.GetPositionAtOffset(match.Index + match.Length, LogicalDirection.Forward);
+                            Brush color = match.Value switch
+                            {
+                                "(/)" => Brushes.LimeGreen,
+                                "(x)" => Brushes.Red,
+                                "(!)" => Brushes.Gold,
+                                "(?)" => Brushes.DodgerBlue,
+                                _ => Brushes.White
+                            };
+                            rangesToColor.Add((start, end, color));
+                        }
+
+                        pointer = pointer.GetPositionAtOffset(runText.Length, LogicalDirection.Forward);
+                        continue;
+                    }
+
+                    pointer = pointer.GetNextContextPosition(LogicalDirection.Forward);
+                }
+
+                foreach ((TextPointer start, TextPointer end, Brush color) in rangesToColor)
+                {
+                    new TextRange(start, end).ApplyPropertyValue(TextElement.ForegroundProperty, color);
+                }
+            }
+            finally
+            {
+                isFormattingDescription = false;
+            }
+        }
+
+        private void OutputModeTabs_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (desc is null || visualOutput is null || resultModeTabs is null)
+            {
+                return;
+            }
+
+            bool showVisual = resultModeTabs.SelectedIndex == 1;
+            desc.Visibility = showVisual ? Visibility.Collapsed : Visibility.Visible;
+            visualOutput.Visibility = showVisual ? Visibility.Visible : Visibility.Collapsed;
+            resultToolbar.Visibility = showVisual ? Visibility.Collapsed : Visibility.Visible;
+            if (showVisual)
+            {
+                RenderOutputMarkup();
+            }
+        }
+
+        private void RenderOutputMarkup()
+        {
+            var document = new FlowDocument
+            {
+                Background = new SolidColorBrush(Color.FromRgb(37, 44, 61)),
+                Foreground = Brushes.White,
+                PagePadding = new Thickness(4)
+            };
+            string[] lines = GetDescriptionText().Replace("\r\n", "\n").Split('\n');
+            bool inNoFormat = false;
+            bool inTable = false;
+            Table? table = null;
+            bool previousLineWasNumbered = false;
+            int numberedListIndex = 0;
+
+            foreach (string line in lines)
+            {
+                string trimmedLine = line.TrimStart();
+                bool isNumberedList = trimmedLine.StartsWith("# ", StringComparison.Ordinal);
+                bool isListLine = trimmedLine.StartsWith("* ", StringComparison.Ordinal)
+                    || trimmedLine.StartsWith("- ", StringComparison.Ordinal)
+                    || isNumberedList;
+                if (!isListLine)
+                {
+                    previousLineWasNumbered = false;
+                    numberedListIndex = 0;
+                }
+
+                if (line.Trim() == "{noformat}" && inNoFormat)
+                {
+                    inNoFormat = false;
+                    continue;
+                }
+
+                if (line.Trim() == "{noformat}")
+                {
+                    inNoFormat = true;
+                    continue;
+                }
+
+                if (inNoFormat)
+                {
+                    document.Blocks.Add(new Paragraph(new Run(line))
+                    {
+                        FontFamily = new FontFamily("Consolas"),
+                        Background = new SolidColorBrush(Color.FromRgb(25, 30, 42))
+                    });
+                    continue;
+                }
+
+                if (line.StartsWith("||", StringComparison.Ordinal))
+                {
+                    table ??= CreateTable();
+                    AddTableRow(table, line, true);
+                    if (!document.Blocks.Contains(table))
+                    {
+                        document.Blocks.Add(table);
+                    }
+                    inTable = true;
+                    continue;
+                }
+
+                if (line.StartsWith("|", StringComparison.Ordinal) && line.EndsWith("|", StringComparison.Ordinal))
+                {
+                    table ??= CreateTable();
+                    AddTableRow(table, line, false);
+                    if (!document.Blocks.Contains(table))
+                    {
+                        document.Blocks.Add(table);
+                    }
+                    inTable = true;
+                    continue;
+                }
+
+                if (inTable)
+                {
+                    table = null;
+                    inTable = false;
+                }
+
+                if (line.StartsWith("h1. ", StringComparison.Ordinal)
+                    || line.StartsWith("h2. ", StringComparison.Ordinal)
+                    || line.StartsWith("h3. ", StringComparison.Ordinal))
+                {
+                    int level = line[1] - '0';
+                    document.Blocks.Add(new Paragraph(ParseInline(line[4..]))
+                    {
+                        FontSize = 20 - (level * 2),
+                        FontWeight = FontWeights.Bold,
+                        Margin = new Thickness(0, 6, 0, 4)
+                    });
+                    continue;
+                }
+
+                if (isListLine)
+                {
+                    if (isNumberedList)
+                    {
+                        numberedListIndex = previousLineWasNumbered ? numberedListIndex + 1 : 1;
+                    }
+                    else
+                    {
+                        numberedListIndex = 0;
+                    }
+
+                    previousLineWasNumbered = isNumberedList;
+                    var listParagraph = new Paragraph
+                    {
+                        Margin = new Thickness(20, 0, 0, 0)
+                    };
+                    listParagraph.Inlines.Add(new Run(isNumberedList
+                        ? $"{numberedListIndex}. "
+                        : "\u2022 "));
+                    listParagraph.Inlines.Add(ParseInline(trimmedLine[2..]));
+                    document.Blocks.Add(listParagraph);
+
+                    continue;
+                }
+
+                if (line.StartsWith("{quote}", StringComparison.Ordinal))
+                {
+                    document.Blocks.Add(new Paragraph(ParseInline(line[7..].TrimEnd("{quote}".ToCharArray())))
+                    {
+                        BorderBrush = Brushes.Gray,
+                        BorderThickness = new Thickness(2, 0, 0, 0),
+                        Padding = new Thickness(8, 0, 0, 0)
+                    });
+                    continue;
+                }
+
+                document.Blocks.Add(new Paragraph(ParseInline(line)));
+            }
+
+            visualOutput.Document = document;
+        }
+
+        private static Table CreateTable()
+        {
+            return new Table
+            {
+                CellSpacing = 0,
+                BorderBrush = Brushes.Gray,
+                BorderThickness = new Thickness(1),
+                Margin = new Thickness(0, 4, 0, 4)
+            };
+        }
+
+        private static void AddTableRow(Table table, string line, bool header)
+        {
+            string separator = header ? "||" : "|";
+            string content = line.Trim(separator.ToCharArray());
+            string[] cells = content.Split(separator, StringSplitOptions.None);
+            var row = new TableRow();
+            foreach (string cell in cells)
+            {
+                row.Cells.Add(new TableCell(new Paragraph(ParseInline(cell.Trim())))
+                {
+                    Background = header ? new SolidColorBrush(Color.FromRgb(48, 58, 80)) : null,
+                    BorderBrush = Brushes.Gray,
+                    BorderThickness = new Thickness(0, 0, 1, 1)
+                });
+            }
+            table.RowGroups.Add(new TableRowGroup { Rows = { row } });
+        }
+
+        private static Inline ParseInline(string text)
+        {
+            var paragraph = new Span();
+            int position = 0;
+            MatchCollection matches = Regex.Matches(text, @"(\(\?\)|\(/\)|\(x\)|\(!\)|\{color:[^}]+\}|\{color\}|\{code\}|\{code\}|\{noformat\}|\{noformat\}|\{quote\}|\{quote\}|\{panel\}|\{panel\}|\{anchor:[^}]+\}|\{anchor\}|\*\*[^*]+\*\*|\*[^*]+\*|_[^_]+_|\{\{[^}]+\}\}|\[[^\]]+\])");
+            foreach (Match match in matches)
+            {
+                if (match.Index > position)
+                {
+                    paragraph.Inlines.Add(new Run(text[position..match.Index]));
+                }
+
+                string value = match.Value;
+                if (value == "(?)")
+                {
+                    paragraph.Inlines.Add(new Run("\u2753"));
+                }
+                else if (value == "(/)")
+                {
+                    paragraph.Inlines.Add(new Run("\u2705"));
+                }
+                else if (value == "(x)")
+                {
+                    paragraph.Inlines.Add(new Run("\u274C"));
+                }
+                else if (value == "(!)")
+                {
+                    paragraph.Inlines.Add(new Run("\u26A0\uFE0F"));
+                }
+                else if (value.StartsWith("**") && value.EndsWith("**"))
+                {
+                    paragraph.Inlines.Add(new Run(value[2..^2]) { FontWeight = FontWeights.Bold });
+                }
+                else if (value.StartsWith("*") && value.EndsWith("*"))
+                {
+                    paragraph.Inlines.Add(new Run(value[1..^1]) { FontWeight = FontWeights.Bold });
+                }
+                else if (value.StartsWith("_") && value.EndsWith("_"))
+                {
+                    paragraph.Inlines.Add(new Run(value[1..^1]) { FontStyle = FontStyles.Italic });
+                }
+                else if (value.StartsWith("{{") && value.EndsWith("}}"))
+                {
+                    paragraph.Inlines.Add(new Run(value[2..^2]) { FontFamily = new FontFamily("Consolas") });
+                }
+                else if (value.StartsWith("[") && value.EndsWith("]") && value.Contains('|'))
+                {
+                    string[] link = value[1..^1].Split('|', 2);
+                    paragraph.Inlines.Add(new Hyperlink(new Run(link[0])) { NavigateUri = new Uri(link[1], UriKind.RelativeOrAbsolute) });
+                }
+                else
+                {
+                    paragraph.Inlines.Add(new Run(value));
+                }
+                position = match.Index + match.Length;
+            }
+
+            if (position < text.Length)
+            {
+                paragraph.Inlines.Add(new Run(text[position..]));
+            }
+            return paragraph;
         }
         private void TextBox_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
@@ -1242,6 +1653,12 @@ namespace TESTER
 
         private void ClearTestEnvironmentSection_Click(object sender, RoutedEventArgs e)
         {
+            if (testEnvironmentExpandIcon.Visibility == Visibility.Visible)
+            {
+                SetSectionVisibility(testEnvironmentDetails, true);
+                return;
+            }
+
             requiresManualDatabaseAddress = false;
             isUsingCachedDatabaseAddress = false;
             address.Text = String.Empty;
@@ -1254,6 +1671,9 @@ namespace TESTER
             DataManager.NrRewizji = String.Empty;
             DataManager.AdresBazyDanych = String.Empty;
             AnimateDatabaseComboBox(false);
+            Dispatcher.BeginInvoke(
+                new Action(RefreshEnvironmentLayout),
+                System.Windows.Threading.DispatcherPriority.ContextIdle);
             ImageBehavior.SetAnimatedSource(ConnectionIndicator, null);
             SetSectionVisibility(testEnvironmentDetails, true);
             testEnvironmentHeader.Foreground = Brushes.White;
@@ -1262,6 +1682,12 @@ namespace TESTER
 
         private void ClearTestCaseSection_Click(object sender, RoutedEventArgs e)
         {
+            if (testCaseExpandIcon.Visibility == Visibility.Visible)
+            {
+                SetSectionVisibility(testCaseDetails, true);
+                return;
+            }
+
             pesel.Text = String.Empty;
             jos.Text = String.Empty;
             pac.Text = DefaultPatientIdentifiers;
@@ -1271,14 +1697,49 @@ namespace TESTER
 
         private void ClearPathSection_Click(object sender, RoutedEventArgs e)
         {
+            if (pathExpandIcon.Visibility == Visibility.Visible)
+            {
+                SetSectionVisibility(pathDetails, true);
+                return;
+            }
+
             path.Text = String.Empty;
+            Dispatcher.BeginInvoke(
+                new Action(RefreshPathLayout),
+                System.Windows.Threading.DispatcherPriority.ContextIdle);
             SetSectionVisibility(pathDetails, true);
             pathHeader.Foreground = Brushes.White;
+        }
+
+        private void RefreshPathLayout()
+        {
+            double availableWidth = path.ActualWidth > 0 ? path.ActualWidth : pathDetails.ActualWidth;
+            if (availableWidth <= 0)
+            {
+                return;
+            }
+
+            pathDetails.BeginAnimation(HeightProperty, null);
+            pathDetails.ClearValue(HeightProperty);
+            path.Height = Double.NaN;
+            path.Measure(new Size(availableWidth, Double.PositiveInfinity));
+            double desiredHeight = Math.Clamp(path.DesiredSize.Height, path.MinHeight, path.MaxHeight);
+            path.Height = desiredHeight;
+            pathDetails.Height = desiredHeight + path.Margin.Top + path.Margin.Bottom;
+            pathDetails.InvalidateMeasure();
+            pathDetails.UpdateLayout();
+        }
+
+        private void ClearDescriptionSection_Click(object sender, RoutedEventArgs e)
+        {
+            SetDescriptionText(String.Empty);
+            visualOutput.Document = new FlowDocument();
         }
 
         private void AnimateDatabaseComboBox(bool show)
         {
             int animationVersion = ++databaseComboBoxAnimationVersion;
+            dbComboBoxContainer.BeginAnimation(HeightProperty, null);
             dbComboBoxContainer.Visibility = Visibility.Visible;
             var heightAnimation = new DoubleAnimation
             {
@@ -1293,7 +1754,20 @@ namespace TESTER
                 {
                     if (animationVersion == databaseComboBoxAnimationVersion)
                     {
+                        dbComboBoxContainer.Height = 0;
                         dbComboBoxContainer.Visibility = Visibility.Collapsed;
+                        RefreshEnvironmentLayout();
+                    }
+                };
+            }
+            else
+            {
+                heightAnimation.Completed += (_, _) =>
+                {
+                    if (animationVersion == databaseComboBoxAnimationVersion)
+                    {
+                        dbComboBoxContainer.Height = 26;
+                        RefreshEnvironmentLayout();
                     }
                 };
             }
@@ -1301,14 +1775,31 @@ namespace TESTER
             dbComboBoxContainer.BeginAnimation(HeightProperty, heightAnimation);
         }
 
+        private void RefreshEnvironmentLayout()
+        {
+            testEnvironmentDetails.BeginAnimation(HeightProperty, null);
+            testEnvironmentDetails.ClearValue(HeightProperty);
+            testEnvironmentDetails.InvalidateMeasure();
+            testEnvironmentDetails.UpdateLayout();
+        }
+
         private void ClearButton_Click(object sender, RoutedEventArgs e)
         {
+            if (AreAnySectionsCollapsed())
+            {
+                ExpandAllSections();
+                return;
+            }
+
             address.Text = string.Empty;
             requiresManualDatabaseAddress = false;
             isUsingCachedDatabaseAddress = false;
             UpdateCachedDatabaseAddressIndicator();
             dbComboBox.Text = String.Empty;
             AnimateDatabaseComboBox(false);
+            Dispatcher.BeginInvoke(
+                new Action(RefreshEnvironmentLayout),
+                System.Windows.Threading.DispatcherPriority.ContextIdle);
 
             pac.Text = DefaultPatientIdentifiers;
 
@@ -1316,7 +1807,10 @@ namespace TESTER
             jos.Text = string.Empty;
 
             path.Text = string.Empty;
-            desc.Text = string.Empty;
+            Dispatcher.BeginInvoke(
+                new Action(RefreshPathLayout),
+                System.Windows.Threading.DispatcherPriority.ContextIdle);
+            SetDescriptionText(string.Empty);
 
 
             DataManager.NrRewizji = string.Empty;
@@ -1335,6 +1829,60 @@ namespace TESTER
             testEnvironmentHeader.Foreground = Brushes.White;
             testCaseHeader.Foreground = Brushes.White;
             pathHeader.Foreground = Brushes.White;
+            UpdateClearAllButtonState();
+        }
+
+        private bool AreAnySectionsCollapsed()
+        {
+            return testEnvironmentDetails.Visibility != Visibility.Visible
+                || testCaseDetails.Visibility != Visibility.Visible
+                || pathDetails.Visibility != Visibility.Visible;
+        }
+
+        private void ExpandAllSections()
+        {
+            SetSectionVisibility(testEnvironmentDetails, true);
+            SetSectionVisibility(testCaseDetails, true);
+            SetSectionVisibility(pathDetails, true);
+            Dispatcher.BeginInvoke(
+                new Action(UpdateClearAllButtonState),
+                System.Windows.Threading.DispatcherPriority.ContextIdle);
+        }
+
+        private void UpdateClearAllButtonState()
+        {
+            bool expandMode = AreAnySectionsCollapsed();
+            string tooltip = expandMode ? "Rozwiń wszystkie" : "Wyczyść dane";
+
+            clearAllButton.Content = expandMode ? CreateExpandAllIcon() : CreateClearIcon(20);
+            clearAllButton.ToolTip = tooltip;
+            compactClearAllButton.Content = expandMode ? CreateExpandAllIcon() : CreateClearIcon(20);
+            compactClearAllButton.ToolTip = tooltip;
+        }
+
+        private static SvgViewbox CreateClearIcon(double size)
+        {
+            return new SvgViewbox
+            {
+                Width = size,
+                Height = size,
+                Stretch = Stretch.Uniform,
+                Source = new Uri(
+                    "pack://application:,,,/TESTER;component/resources/trash.svg",
+                    UriKind.Absolute)
+            };
+        }
+
+        private static TextBlock CreateExpandAllIcon()
+        {
+            return new TextBlock
+            {
+                Text = "⇅",
+                Foreground = Brushes.White,
+                FontSize = 16,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
         }
 
 
@@ -1345,6 +1893,9 @@ namespace TESTER
             UpdateCachedDatabaseAddressIndicator();
             dbComboBox.Text = String.Empty;
             AnimateDatabaseComboBox(false);
+            Dispatcher.BeginInvoke(
+                new Action(RefreshEnvironmentLayout),
+                System.Windows.Threading.DispatcherPriority.ContextIdle);
             DataManager.NrRewizji = string.Empty;
             DataManager.AdresBazyDanych = string.Empty;
             DataManager.NrKompilacji = string.Empty;
@@ -1417,13 +1968,11 @@ namespace TESTER
                     {
                         bitmap.UriSource = new Uri("resources/checkmark_yellow.png", UriKind.RelativeOrAbsolute);
                         updateOutput(sender, e);
-                        CollapseCompletedSections();
                     }
                     else
                     {
                         bitmap.UriSource = new Uri("resources/checkmark_green.png", UriKind.RelativeOrAbsolute);
                         updateOutput(sender, e);
-                        CollapseCompletedSections();
                     }
 
                     bitmap.EndInit();

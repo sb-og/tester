@@ -20,9 +20,7 @@ public static class ConfigHelper
         { "OpacityHover", "0.3" },
         { "InstaFill", "True" },
         { "AutoHideSections", "True" },
-        { "AutoHideTestEnvironmentDetails", "True" },
-        { "AutoHideTestCaseDetails", "True" },
-        { "AutoHidePathDetails", "True" },
+        { "ShowResultTabs", "False" },
         { "WarnOnExit", "False" },
         { "GenerateEmptyFields", "False" },
         { "PreserveWindowSize", "True" },
@@ -81,7 +79,6 @@ public static class ConfigHelper
         {
             CurrentSettings = ReadSettings();
             MigrateWindowOpacitySetting(CurrentSettings);
-            MigrateAutoHideSettings(CurrentSettings);
         }
 
         foreach (var defaultSetting in DefaultSettings)
@@ -119,25 +116,6 @@ public static class ConfigHelper
         }
 
         settings.Remove("WindowOpacity");
-    }
-
-    private static void MigrateAutoHideSettings(Dictionary<string, string?> settings)
-    {
-        string autoHideSections = settings.TryGetValue("AutoHideSections", out string? value) ? value ?? "True" : "True";
-        string[] autoHideSettingKeys =
-        {
-            "AutoHideTestEnvironmentDetails",
-            "AutoHideTestCaseDetails",
-            "AutoHidePathDetails"
-        };
-
-        foreach (string settingKey in autoHideSettingKeys)
-        {
-            if (!settings.ContainsKey(settingKey))
-            {
-                settings[settingKey] = autoHideSections;
-            }
-        }
     }
 
     private static void SaveSettings(Dictionary<string, string?> settings)
